@@ -104,7 +104,7 @@ const all = SLIM_CATALOG;
           <p class="font-bold text-neutral-900 text-[15px]">Numatoma suma</p>
           <p class="text-xs text-[#6E6E73] mt-0.5">Tik produktai</p>
         </div>
-        <p translate="no" class="text-[26px] font-extrabold text-neutral-900 leading-none">${formatPrice(total)} <span class="ml-1 text-[13px] font-bold text-[#9E9E9E]">€</span></p>
+        <p translate="no" class="text-[26px] font-extrabold text-neutral-900 leading-none">${formatPrice(total)}</p>
       </div>
 
       <!-- Crypto / remise -->
@@ -115,7 +115,7 @@ const all = SLIM_CATALOG;
         </p>
         <p translate="no" class="text-[14px] font-extrabold text-[#7C3AED]">${formatPrice(cryptoTotal)} <span class="font-bold text-[12px]">(sutaupote ${CRYPTO_DISCOUNT_PERCENT}%)</span></p>
       </div>
-      <p translate="no" class="text-[12px] text-neutral-500 text-center">Minimalus užsakymas: ${formatPrice(MIN)} €</p>
+      <p translate="no" class="text-[12px] text-neutral-500 text-center">Minimalus užsakymas: ${formatPrice(MIN)}</p>
 
       <!-- Règlement avant livraison -- zone livraison -->
       <div class="rounded-lg border border-neutral-200 bg-white p-5 space-y-4">
@@ -169,13 +169,13 @@ const all = SLIM_CATALOG;
               <span class="h-9 w-9 rounded-full bg-[#F5F5F5] flex items-center justify-center text-neutral-700">
                 <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 22h18"></path><path d="M6 18v-7"></path><path d="M10 18v-7"></path><path d="M14 18v-7"></path><path d="M18 18v-7"></path><path d="m12 2 8 5H4z"></path></svg>
               </span>
-              <div><p class="text-[12px] font-bold text-neutral-900">SEPA</p><p class="text-[10px] text-[#6E6E73]">Bankinis pavedimas</p></div>
+              <div><p class="text-[12px] font-bold text-neutral-900">Bankinis pavedimas</p><p class="text-[10px] text-[#6E6E73]">IBAN / SWIFT</p></div>
             </div>
             <div class="flex items-center gap-1.5">
               <span class="h-9 w-9 rounded-full bg-[#F5F5F5] flex items-center justify-center text-neutral-700">
                 <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="5" rx="2"></rect><path d="M2 10h20"></path></svg>
               </span>
-              <div><p class="text-[12px] font-bold text-neutral-900">Kortelė</p><p class="text-[10px] text-[#6E6E73]">Visa / Mastercard</p></div>
+              <div><p class="text-[12px] font-bold text-neutral-900">Kredito kortelė</p><p class="text-[10px] text-[#6E6E73]">Visa / Mastercard</p></div>
             </div>
             <div class="flex items-center gap-1.5">
               <span class="h-9 w-9 rounded-full bg-[#F5F5F5] flex items-center justify-center text-neutral-700">
@@ -187,7 +187,7 @@ const all = SLIM_CATALOG;
               <span class="h-9 w-9 rounded-full bg-[#F5F5F5] flex items-center justify-center text-neutral-700">
                 <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13"></path><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"></path><path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8"></path><path d="M16.5 8a2.5 2.5 0 0 0 0-5C13 3 12 8 12 8"></path></svg>
               </span>
-              <div><p class="text-[12px] font-bold text-neutral-900">Dovanų kortelė</p><p class="text-[10px] text-[#6E6E73]">Dovanų kodas</p></div>
+              <div><p class="text-[12px] font-bold text-neutral-900">Dovanų kortelė</p><p class="text-[10px] text-[#6E6E73]">Sutaupote ${CRYPTO_DISCOUNT_PERCENT}%</p></div>
             </div>
           </div>
         </div>
@@ -198,14 +198,14 @@ const all = SLIM_CATALOG;
         <div class="w-full">
           <button type="button" disabled class="flex items-center justify-center gap-2 w-full bg-neutral-200 text-neutral-500 py-4 text-[15px] font-semibold rounded-lg cursor-not-allowed">
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
-            Pateikti užsakymą
+            Atsiskaityti
           </button>
           <p class="text-center text-[13px] text-[#E53E3E] mt-2 font-bold">Minimalus užsakymas: ${formatPrice(MIN)}. Pridėkite <span translate="no">${money0(under)}</span> daugiau.</p>
         </div>` : `
         <a id="checkout" href="${url}" target="_blank" rel="noopener noreferrer"
           class="flex items-center justify-center gap-2 w-full rounded-lg bg-primary text-white py-4 text-[15px] font-bold hover:bg-red-700 transition-colors">
           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
-          Pateikti užsakymą
+          Atsiskaityti
         </a>`}
       <p class="flex items-center justify-center gap-1.5 text-xs text-[#9E9E9E]">
         <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>

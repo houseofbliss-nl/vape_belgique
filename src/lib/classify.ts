@@ -203,10 +203,10 @@ export const SUBS_ORDER: Record<CatKey, string[]> = {
 
 export const SUBS_LABELS: Record<string, string> = {
   "iki-10k": "Iki 10 000 puffs",
-  "10-20k": "10 000-20 000",
-  "20-30k": "20 000-30 000",
-  "30-50k": "30 000-50 000",
-  "50k-plus": "50 000+",
+  "10-20k": "10 000-20 000 puffs",
+  "20-30k": "20 000-30 000 puffs",
+  "30-50k": "30 000-50 000 puffs",
+  "50k-plus": "50 000+ puffs",
   kita: "Kita",
   "0mg": "0 mg",
   "3mg": "3 mg",

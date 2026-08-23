@@ -48,26 +48,20 @@ const { count: initialCount = getCount() } = Astro.props;
 
 <script define:vars={{ initialCount }}>
   const badge = document.getElementById("cart-count");
+  const countFromStorage = () => {
+    const raw = localStorage.getItem("vapelt:my-list") || "[]";
+    try { return JSON.parse(raw).reduce((s, i) => s + i.quantity, 0); } catch { return 0; }
+  };
   const show = (n) => {
     if (!badge) return;
     badge.textContent = String(n);
     badge.classList.toggle("hidden", n <= 0);
   };
-  show(initialCount);
-  window.addEventListener("vapelt:storage", () => {
-    const raw = localStorage.getItem("vapelt:my-list") || "[]";
-    try {
-      const n = JSON.parse(raw).reduce((s, i) => s + i.quantity, 0);
-      show(n);
-    } catch {}
-  });
-  window.addEventListener("storage", () => {
-    const raw = localStorage.getItem("vapelt:my-list") || "[]";
-    try {
-      const n = JSON.parse(raw).reduce((s, i) => s + i.quantity, 0);
-      show(n);
-    } catch {}
-  });
+  // Ne pas se fier à initialCount (0 côté serveur, pas de localStorage en SSR) :
+  // relire localStorage au chargement pour que le badge reflète le panier réel.
+  show(countFromStorage());
+  window.addEventListener("vapelt:storage", () => show(countFromStorage()));
+  window.addEventListener("storage", () => show(countFromStorage()));
   // Bouton Recherche desktop → ouvre SearchDialog.
   document.querySelector("[data-open-search-desktop]")?.addEventListener("click", () =>
     window.dispatchEvent(new CustomEvent("vapelt:search"))
