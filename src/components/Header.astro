@@ -1,0 +1,75 @@
+---
+// En-tête — reproduction de Header.tsx vapespot (lituanien, logo VAPELT, research dialog).
+// Recherche desktop → ouvre SearchDialog (événement "vapelt:search").
+import Icon from "./Icon.astro";
+import { getCount } from "../lib/store";
+const { count: initialCount = getCount() } = Astro.props;
+---
+<header class="sticky top-0 z-40 bg-white border-b border-[#F0F0F0]">
+  <div class="max-w-7xl mx-auto flex items-center px-4 md:px-6 h-[60px] md:h-[72px] gap-3">
+    <!-- Hamburger -->
+    <button type="button" id="sidebar-open" aria-label="Atidaryti meniu"
+      class="p-1.5 text-black hover:opacity-70 transition-opacity shrink-0">
+      <Icon name="menu" class="h-6 w-6" />
+    </button>
+
+    <!-- Logo — centré mobile, gauche desktop -->
+    <a href="/" aria-label="VAPELT"
+      class="flex items-center md:mr-2 md:static absolute left-1/2 -translate-x-1/2 md:translate-x-0">
+      <img src="/images/logo-vapelt.svg" alt="VAPELT" class="h-7 md:h-8 w-auto" />
+    </a>
+
+    <!-- Recherche desktop -->
+    <div class="hidden md:flex flex-1 justify-center px-6">
+      <button type="button" data-open-search-desktop
+        class="w-full max-w-xl flex items-center gap-3 h-11 px-4 rounded-full bg-[#F5F5F7] text-sm text-[#6E6E73] hover:bg-[#ECECEF] transition-colors">
+        <Icon name="search" class="h-4 w-4 shrink-0" strokeWidth={1.75} />
+        <span>Ieškoti produktų, prekių ženklų…</span>
+      </button>
+    </div>
+
+    <!-- Icônes droite -->
+    <div class="flex items-center ml-auto gap-1">
+      <a href="/cart/" aria-label="Mano sąrašas"
+        class="relative p-2 md:px-3 md:py-2 flex items-center gap-1.5 text-black hover:opacity-70 transition-opacity">
+        <Icon name="cart" class="h-5 w-5" strokeWidth={1.75} />
+        <span class="hidden md:inline text-sm font-medium">Mano sąrašas</span>
+        <span id="cart-count" class="absolute -top-0.5 right-0 md:static md:ml-1 min-w-[20px] h-[20px] px-1 rounded-full bg-black text-white text-[11px] font-semibold flex items-center justify-center hidden"></span>
+      </a>
+
+      <a href="https://t.me/Vapelt_shop" target="_blank" rel="noopener noreferrer" aria-label="Telegram"
+        class="hidden md:flex p-2 md:px-3 md:py-2 items-center gap-1.5 text-black hover:opacity-70 transition-opacity">
+        <Icon name="send" class="h-5 w-5" strokeWidth={1.75} />
+        <span class="hidden md:inline text-sm font-medium">Telegram</span>
+      </a>
+    </div>
+  </div>
+</header>
+
+<script define:vars={{ initialCount }}>
+  const badge = document.getElementById("cart-count");
+  const show = (n) => {
+    if (!badge) return;
+    badge.textContent = String(n);
+    badge.classList.toggle("hidden", n <= 0);
+  };
+  show(initialCount);
+  window.addEventListener("vapelt:storage", () => {
+    const raw = localStorage.getItem("vapelt:my-list") || "[]";
+    try {
+      const n = JSON.parse(raw).reduce((s, i) => s + i.quantity, 0);
+      show(n);
+    } catch {}
+  });
+  window.addEventListener("storage", () => {
+    const raw = localStorage.getItem("vapelt:my-list") || "[]";
+    try {
+      const n = JSON.parse(raw).reduce((s, i) => s + i.quantity, 0);
+      show(n);
+    } catch {}
+  });
+  // Bouton Recherche desktop → ouvre SearchDialog.
+  document.querySelector("[data-open-search-desktop]")?.addEventListener("click", () =>
+    window.dispatchEvent(new CustomEvent("vapelt:search"))
+  );
+</script>

@@ -1,0 +1,463 @@
+---
+// PAGE SOUS-CATÉGORIE — listing produits d'un bucket (ex: « Iki 10 000 puffs »).
+// DESIGN FILTRE = reproduction fidèle de vapespot (products.$category.tsx) :
+//   • Desktop (≥md)  : SIDEBAR gauche (All products + marques + prix) + tri
+//                      « Rūšiuoti » en haut à droite au-dessus de la grille.
+//   • Mobile (<md)   : barre de PILLS horizontales (Prekės ženklas / Kaina /
+//                      Rūšiuoti) + bottom sheets (panneau bas) à la vapespot.
+// Filtrage client-side vanilla (cartes pré-rendues SEO, data-brand / data-price).
+import Base from "../../../layouts/Base.astro";
+import ProductCard from "../../../components/ProductCard.astro";
+import AddToCart from "../../../components/AddToCart.astro";
+import { products } from "../../../data/products.json";
+import { TAXONOMY } from "../../../lib/taxonomy";
+import type { CategoryNode, SubCategory } from "../../../lib/taxonomy";
+import { SITE_NAME, SITE_URL } from "../../../lib/site";
+
+export function getStaticPaths() {
+  return TAXONOMY.flatMap((c) =>
+    c.subs.map((s) => ({ params: { cat: c.id, sub: s.key }, props: { category: c, sub: s } }))
+  );
+}
+
+interface PProps { category: CategoryNode; sub: SubCategory; }
+const { category, sub } = Astro.props;
+
+const byHandle = new Map(products.map((p) => [p.handle, p]));
+const items = sub.handles
+  .map((h) => byHandle.get(h))
+  .filter((p): p is NonNullable<typeof p> => Boolean(p));
+
+const prices = items.map((p) => p.price_eur ?? 0);
+const min = prices.length ? Math.floor(Math.min(...prices)) : 0;
+const max = prices.length ? Math.ceil(Math.max(...prices)) : 0;
+const totalCount = items.length;
+const brands = sub.brands;
+const hasBrands = brands.length > 1;
+
+// ItemList JSON-LD : premiers produits du bucket.
+const itemListSchema = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  name: sub.label,
+  numberOfItems: totalCount,
+  itemListElement: items.slice(0, 30).map((p, i) => ({
+    "@type": "ListItem",
+    position: i + 1,
+    name: p.title,
+    url: `${SITE_URL}/produktis/${p.handle}`,
+  })),
+};
+
+// Fil d'ariane → BreadcrumbList (Pradžia › Cat › Sous-cat).
+const crumbs = [
+  { name: "Pradžia", url: "/" },
+  { name: category.label, url: `/kategorijos/${category.id}` },
+  { name: sub.label },
+];
+---
+<Base
+  title={`${sub.label} — ${category.label} — ${SITE_NAME}`}
+  description={`VAPELT: ${sub.label} (${totalCount} produktai). Elektroninės cigaretės, vienkartiniai garintuvai, e-skysčiai, nikotino pagalvėlės. Užsakymas per Telegram.`}
+  canonicalPath={`/kategorijos/${category.id}/${sub.key}`}
+  jsonLd={itemListSchema}
+  breadcrumb={crumbs}
+>
+  <div class="mx-auto max-w-7xl px-3 py-6 md:px-6">
+    <!-- Fil d'Ariane -->
+    <nav class="mb-3 flex flex-wrap items-center gap-1.5 text-xs text-neutral-500">
+      <a href="/" class="hover:text-neutral-900">Pradžia</a>
+      <span>/</span>
+      <a href={`/kategorijos/${category.id}/`} class="hover:text-neutral-900">{category.label}</a>
+      <span>/</span>
+      <span class="text-neutral-700">{sub.label}</span>
+    </nav>
+
+    <h1 class="mb-1 text-3xl font-black text-neutral-900 md:text-4xl">{sub.label}</h1>
+    <p id="sub-count" class="mb-4 text-sm text-[#6E6E73]">{totalCount} produktai</p>
+
+    <!-- ══ Montage responsive : sidebar desktop / barre pills mobile ══ -->
+    <div class="lg:flex lg:items-start lg:gap-4">
+      <!-- Sidebar DESKTOP (hidden md:block, FLOTTÉE → les cards s'enroulent autour
+           et passent pleine largeur sous le filtre une fois qu'il s'arrête) -->
+      <aside id="filters-sidebar" class="hidden lg:flex lg:flex-col w-64 shrink-0 p-2 text-sm lg:h-[404px]">
+        {/* Tous les produits — pilule pleine largeur */}
+        <button type="button" data-brand="" class="brand-all shrink-0 block w-full px-4 py-3.5 rounded-[10px] text-[15px] font-semibold text-center">
+          Visi produktai ({totalCount})
+        </button>
+
+        {/* Priorité : marques si plusieurs */}
+        {hasBrands && (
+          <>
+            <p class="mt-5 mb-1.5 shrink-0 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-400">Prekės ženklas</p>
+            <ul id="brand-list" class="flex-1 min-h-0 overflow-y-auto space-y-1 pr-1">
+              {brands.map((b) => (
+                <li key={b.slug}>
+                  <button
+                    type="button"
+                    data-brand={b.slug}
+                    class="brand-chip w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-[10px] text-left hover:bg-[#F5F5F7]"
+                  >
+                    <span class="flex-1 truncate text-[15px] text-black">{b.name}</span>
+                    <span class="text-xs text-[#9E9E9E]">{b.count}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+
+        {/* Cadre prix min/max — seule toujours visible */}
+        <div class="mt-6 shrink-0 border-t border-[#F0F0F0] pt-4">
+          <p class="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-500">Kaina</p>
+          <div translate="no" class="flex items-center gap-1.5">
+            <input id="s-price-min" type="number" min={min} max={max} value={min}
+              class="w-full h-9 border border-[#E5E5EA] rounded-[8px] px-2 text-sm outline-none focus:border-[#7C3AED]" />
+            <span class="text-[#9E9E9E]">–</span>
+            <input id="s-price-max" type="number" min={min} max={max} value={max}
+              class="w-full h-9 border border-[#E5E5EA] rounded-[8px] px-2 text-sm outline-none focus:border-[#7C3AED]" />
+            <span class="text-xs text-[#9E9E9E]">€</span>
+          </div>
+
+          </div>
+      </aside>
+
+      {/** Main droite — colonne contenu (flex-1) : tri + grille 2 COL à côté de la
+          sidebar. La grille 3 COL pleine largeur est juste après le conteneur flex. */}
+      <div class="lg:flex-1 min-w-0 space-y-3">
+        {/* Tri DEKSTOP — en haut à droite (comme vapespot) */}
+        <div class="hidden lg:flex items-center justify-end">
+          <div class="relative inline-block" id="sort-desktop">
+            <button type="button" data-sort-toggle
+              class="flex items-center gap-2 text-[14px] font-medium text-black border border-[#E5E7EB] px-4 py-2 hover:bg-[#FAFAFA] rounded-[8px]">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7h4l3 7h4l3-7h4M8 21c0 0 8-9 12-9"/></svg>
+              <span id="sort-label">Rūšiuoti</span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-[#6E6E73]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
+            </button>
+            <div id="sort-menu" class="hidden absolute right-0 top-full mt-1 bg-white border border-[#E5E7EB] shadow-lg z-50 min-w-[210px] rounded-[10px] overflow-hidden">
+              <button type="button" data-sort="default" class="sort-opt w-full flex items-center justify-between px-5 py-3 border-b border-[#F5F5F5] hover:bg-[#FAFAFA]">
+                <span>Standartinis</span>
+              </button>
+              <button type="button" data-sort="price-asc" class="sort-opt w-full flex items-center justify-between px-5 py-3 border-b border-[#F5F5F5] hover:bg-[#FAFAFA]">
+                <span>Kaina ↑</span>
+              </button>
+              <button type="button" data-sort="price-desc" class="sort-opt w-full flex items-center justify-between px-5 py-3 border-b border-[#F5F5F5] hover:bg-[#FAFAFA]">
+                <span>Kaina ↓</span>
+              </button>
+              <button type="button" data-sort="az" class="sort-opt w-full flex items-center justify-between px-5 py-3 hover:bg-[#FAFAFA]">
+                <span>Pavadinimas A–Ž</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Barre filtres MOBILE (au-dessus de la grille) -->
+        <div id="mobile-filters" class="lg:hidden pt-1 pb-1">
+          <div class="flex items-center gap-1.5 mb-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-[#9E9E9E]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"/></svg>
+            <span class="text-[11px] font-semibold uppercase tracking-widest text-[#9E9E9E]">Filtrai</span>
+          </div>
+          <div class="flex items-center gap-2 overflow-x-auto pb-1">
+            {hasBrands && (
+              <button type="button" data-mopen="brand" class="shrink-0 inline-flex items-center gap-2 bg-white border border-[#E0E0E0] px-4 py-2.5 text-[13px] font-medium text-black rounded-[8px]">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-[#6E6E73]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 4.66A2.25 2.25 0 0 0 9.568 3Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6Z"/></svg>
+                Prekės ženklas
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-[#6E6E73] ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
+              </button>
+            )}
+            <button type="button" data-mopen="price" class="shrink-0 inline-flex items-center gap-2 bg-white border border-[#E0E0E0] px-4 py-2.5 text-[13px] font-medium text-black rounded-[8px]">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-[#6E6E73]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+              Kaina
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-[#6E6E73] ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
+            </button>
+            <button type="button" data-mopen="sort" class="shrink-0 inline-flex items-center gap-2 bg-white border border-[#E0E0E0] px-4 py-2.5 text-[13px] font-medium text-black rounded-[8px]">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-[#6E6E73]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h10M7 7V4m0 3v3M17 17H7m10 0v3m0-3v-3m0-3h5l-2-2m0 0 2 2"/></svg>
+              Rūšiuoti
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-[#6E6E73] ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
+            </button>
+          </div>
+          <div id="clear-all" class="hidden mt-2">
+            <button type="button" class="inline-flex items-center gap-1 text-[12px] text-[#9E9E9E] underline underline-offset-2">
+              Išvalyti visus filtrus
+            </button>
+          </div>
+        </div>
+
+        <!-- Grille 2 COLONNES : les 4 PREMIÈRES cards (index 0-3) — 2 rangées de 2,
+             exactement à côté de la sidebar (même hauteur que le filtre). -->
+        <div id="product-grid-2col" class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
+          {items.slice(0, 4).map((p) => (
+            <div
+              class="block"
+              data-brand={p.vendor || ""}
+              data-price={String(p.price_eur ?? 0)}
+              data-title-lc={p.title.toLowerCase()}
+            >
+              <ProductCard product={p} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <!-- Grille 3 COLONNES pleine largeur — toutes les cards suivantes (index 4+),
+         sous le filtre : 3 par rangée de gauche à droite, avec espace (gap). -->
+    <div id="product-grid-3col" class="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-3">
+      {items.slice(4).map((p) => (
+        <div
+          class="block"
+          data-brand={p.vendor || ""}
+          data-price={String(p.price_eur ?? 0)}
+          data-title-lc={p.title.toLowerCase()}
+        >
+          <ProductCard product={p} />
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <!-- Bottom sheets MOBILE -->
+  {hasBrands && (
+    <div id="sheet-brand" class="sheet hidden">
+      <div class="sheet-backdrop" data-close></div>
+      <div class="sheet-panel bg-white fixed inset-x-0 bottom-0 z-50 rounded-t-2xl max-h-[78vh] flex flex-col">
+        <div class="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[#F0F0F0] shrink-0">
+          <h2 class="text-[18px] font-bold text-black">Prekės ženklai</h2>
+          <button type="button" class="sheet-close p-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#6E6E73]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg></button>
+        </div>
+        <div class="flex-1 overflow-y-auto">
+          <button type="button" data-brand="" class="sheet-brand w-full flex items-center px-5 py-4 border-b border-[#F5F5F5] active:bg-[#F5F5F5]">
+            <span class="flex-1 text-[15px] text-black text-left">Visi produktai</span>
+            <span class="text-[14px] font-semibold text-[#7C3AED]">{totalCount}</span>
+          </button>
+          {brands.map((b) => (
+            <button key={b.slug} type="button" data-brand={b.slug}
+              class="sheet-brand w-full flex items-center px-5 py-4 border-b border-[#F5F5F5] active:bg-[#F5F5F5]">
+              <span class="flex-1 text-[15px] text-black text-left">{b.name}</span>
+              <span class="text-[14px] font-semibold text-[#7C3AED]">{b.count}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )}
+
+  <div id="sheet-price" class="sheet hidden">
+    <div class="sheet-backdrop" data-close></div>
+    <div class="sheet-panel bg-white fixed inset-x-0 bottom-0 rounded-t-2xl p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-[18px] font-bold text-black">Kaina</h2>
+        <button type="button" class="sheet-close p-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#6E6E73]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg></button>
+      </div>
+      <div translate="no" class="flex items-center gap-2">
+        <input id="m-price-min" type="number" min={min} max={max} value={min} class="flex-1 h-11 border border-[#E5E5EA] rounded-[8px] px-3 text-sm outline-none focus:border-[#7C3AED]" />
+        <span class="text-[#9E9E9E]">–</span>
+        <input id="m-price-max" type="number" min={min} max={max} value={max} class="flex-1 h-11 border border-[#E5E5EA] rounded-[8px] px-3 text-sm outline-none focus:border-[#7C3AED]" />
+        <span class="text-sm font-medium text-black">€</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="sheet-sort" class="sheet hidden">
+    <div class="sheet-backdrop" data-close></div>
+    <div class="sheet-panel bg-white fixed inset-x-0 bottom-0 rounded-t-2xl max-h-[45vh] overflow-y-auto">
+      <div class="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[#F0F0F0]">
+        <h2 class="text-[18px] font-bold text-black">Rūšiuoti</h2>
+        <button type="button" class="sheet-close p-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#6E6E73]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg></button>
+      </div>
+      <button type="button" data-sort="default" class="sort-opt w-full flex items-center justify-between px-5 py-4 border-b border-[#F5F5F5]">
+        <span class="text-[15px]">Standartinis</span>
+      </button>
+      <button type="button" data-sort="price-asc" class="sort-opt w-full flex items-center justify-between px-5 py-4 border-b border-[#F5F5F5]">
+        <span class="text-[15px]">Kaina ↑</span>
+      </button>
+      <button type="button" data-sort="price-desc" class="sort-opt w-full flex items-center justify-between px-5 py-4 border-b border-[#F5F5F5]">
+        <span class="text-[15px]">Kaina ↓</span>
+      </button>
+      <button type="button" data-sort="az" class="sort-opt w-full flex items-center justify-between px-5 py-4">
+        <span class="text-[15px]">Pavadinimas A–Ž</span>
+      </button>
+    </div>
+  </div>
+
+  <AddToCart />
+
+  <script define:vars={{ min: min, max: max }}>
+    (() => {
+    const grid2 = document.getElementById("product-grid-2col");
+    const grid3 = document.getElementById("product-grid-3col");
+    const countEl = document.getElementById("sub-count");
+    if (!grid2 || !grid3 || !countEl) return;
+
+    const allCards = Array.from(grid2.children).concat(Array.from(grid3.children));
+    const slug = (s) => (s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+    let activeBrand = "";
+    let sort = "default";
+
+    // ---- Inputs prix : sidebar desktop (s-*) + sheet mobile (m-*), gardés cohérents ----
+    const sMin = document.getElementById("s-price-min");
+    const sMax = document.getElementById("s-price-max");
+    const mMin = document.getElementById("m-price-min");
+    const mMax = document.getElementById("m-price-max");
+    const priceInputs = [sMin, sMax, mMin, mMax].filter(Boolean);
+
+    // Bornes courantes (utilisées par apply). Initialisées depuis la sidebar.
+    let minBound = parseFloat(sMin?.value ?? 0) || 0;
+    let maxBound = parseFloat(sMax?.value ?? Infinity) || Infinity;
+
+    // Ramène les 4 champs à la même valeur (min ↔ mobile).
+    function syncPriceInputs() {
+      const lo = String(minBound);
+      const hi = isFinite(maxBound) ? String(maxBound) : "";
+      priceInputs.forEach((el) => {
+        el.value = el.id.endsWith("min") ? lo : hi;
+      });
+    }
+
+    // Lit depuis le champ édité (sidebar OU mobile) et resynchronise l'autre.
+    function readPriceFrom(el) {
+      if (el.id.endsWith("min")) minBound = parseFloat(el.value) || 0;
+      else {
+        const mx = parseFloat(el.value);
+        maxBound = Number.isFinite(mx) ? mx : Infinity;
+      }
+      syncPriceInputs();
+    }
+
+    function apply() {
+      const lo = minBound;
+      const hi = maxBound;
+      const visible = allCards.filter((card) => {
+        const brandReact = slug(card.dataset.brand || "");
+        const price = parseFloat(card.dataset.price) || 0;
+        if (activeBrand && brandReact !== activeBrand) return false;
+        if (price < lo || price > hi) return false;
+        return true;
+      });
+
+      const sorted = [...visible];
+      if (sort === "price-asc") sorted.sort((a, b) => (parseFloat(a.dataset.price) || 0) - (parseFloat(b.dataset.price) || 0));
+      else if (sort === "price-desc") sorted.sort((a, b) => (parseFloat(b.dataset.price) || 0) - (parseFloat(a.dataset.price) || 0));
+      else if (sort === "az") sorted.sort((a, b) => (a.dataset.titleLc || "").localeCompare(b.dataset.titleLc || "", "lt"));
+
+      allCards.forEach((c) => c.remove());
+      // Layout « 2 puis 3 » : les 4 premières cartes visibles (index 0-3) vont
+      // dans la grille 2 COLONNES à côté du filtre, les suivantes dans la grille
+      // 3 COLONNES pleine largeur. Grille CSS native = pas de float, gap partout.
+      sorted.forEach((c, idx) => {
+        (idx < 4 ? grid2 : grid3).appendChild(c);
+      });
+      countEl.textContent = sorted.length + " produktai";
+
+      // Etat visuel des chips marque (desktop + sheet) — uniquement les
+      // BOUTONS filtres, PAS les cards (elles portent data-brand sur le wrapper).
+      document.querySelectorAll("[data-brand].brand-all, [data-brand].brand-chip, [data-brand].sheet-brand").forEach((btn) => {
+        const isAll = btn.dataset.brand === "";
+        const active = isAll ? !activeBrand : btn.dataset.brand === activeBrand;
+        btn.classList.toggle("brand-active", active);
+        btn.classList.toggle("brand-inactive", !active);
+      });
+
+      // Label tri
+      const label = document.getElementById("sort-label");
+      if (label) {
+        const map = { "price-asc": "Kaina ↑", "price-desc": "Kaina ↓", az: "Pavadinimas A–Ž" };
+        label.textContent = sort === "default" ? "Rūšiuoti" : map[sort] || "Rūšiuoti";
+      }
+
+      // Clear all visible si un filtre est actif
+      const hasActive = activeBrand !== "" || lo > 0 || hi < Infinity || sort !== "default";
+      document.getElementById("clear-all")?.classList.toggle("hidden", !hasActive);
+
+      // Marque affichée dans la pill mobile (« actif »)
+      // (pas de pill différente ici : le filtre est dans le sheet, l'utilisateur voit le
+      //  compteur changer + border. On toggles une classe sur le pill ouvert)
+    }
+
+    // ---- Clicks marques : sidebar + sheet mobile (handler commun).
+    //      data-brand="" = « Tous les produits ».
+    document.querySelectorAll("[data-brand].brand-all, [data-brand].brand-chip, [data-brand].sheet-brand").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        activeBrand = btn.dataset.brand || "";
+        apply();
+        closeSheets();
+      });
+    });
+
+    // ---- Prix : chaque champ met à jour sa borne + resynchronise l'autre ----
+    priceInputs.forEach((el) => el.addEventListener("change", () => {
+      readPriceFrom(el);
+      apply();
+    }));
+
+    // ---- Tri : menu desktop + sheet mobile ----
+    document.querySelectorAll("[data-sort]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        sort = btn.dataset.sort || "default";
+        apply();
+        closeSheets();
+      });
+    });
+
+    const sortToggle = document.querySelector("[data-sort-toggle]");
+    const sortMenu = document.getElementById("sort-menu");
+    sortToggle?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      sortMenu?.classList.toggle("hidden");
+    });
+    document.addEventListener("click", (e) => {
+      if (sortMenu && !sortMenu.classList.contains("hidden") && !e.target.closest("#sort-desktop")) {
+        sortMenu.classList.add("hidden");
+      }
+    });
+
+    // ---- Bottom sheets (mobile) ----
+    function openSheet(name) {
+      document.getElementById("sheet-" + name)?.classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+    }
+    function closeSheets() {
+      document.querySelectorAll(".sheet").forEach((s) => s.classList.add("hidden"));
+      document.body.style.overflow = "";
+    }
+    document.querySelectorAll("[data-mopen]").forEach((btn) => {
+      btn.addEventListener("click", () => openSheet(btn.dataset.mopen));
+    });
+    document.querySelectorAll(".sheet-close, .sheet-backdrop").forEach((el) => {
+      el.addEventListener("click", closeSheets);
+    });
+
+    // Clear all
+    const clearBtn = document.getElementById("clear-all");
+    clearBtn?.querySelector("button")?.addEventListener("click", () => {
+      activeBrand = "";
+      sort = "default";
+      minBound = min;
+      maxBound = max;
+      syncPriceInputs();
+      apply();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    // Initialisation : état visuel
+    apply();
+    })();
+  </script>
+
+  <style>
+    /* « Visi produktai » de la sidebar : actif = noir/blanc (défaut), sinon gris pâle */
+    .brand-all { background: #F5F5F7; color: #111; }
+    .brand-all.brand-active { background: #111; color: #fff; }
+    /* Marque de la sidebar : actif = fond gris pâle + gras (comme vapespot) */
+    .brand-chip.brand-active { background: #F5F5F7; font-weight: 600; }
+    /* Sheet mobile : marque active = gris pâle + gras */
+    .sheet-brand.brand-active { background: #F5F5F7; font-weight: 600; }
+
+    .sheet { position: fixed; inset: 0; z-index: 60; }
+    .sheet-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.4); }
+    .sheet-panel { position: absolute; left: 0; right: 0; bottom: 0; animation: sheetUp .18s ease-out; }
+    @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+    </style>
+</Base>

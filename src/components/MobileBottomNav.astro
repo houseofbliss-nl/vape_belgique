@@ -1,0 +1,51 @@
+---
+// Navigation basse mobile — reproduction EXACTE de MobileBottomNav.tsx vapespot.
+// 4 entrées : Pagrindinis / Ieškoti / Sąrašas / Telegram. La recherche ouvre SearchDialog.
+import Icon from "./Icon.astro";
+import { getCount } from "../lib/store";
+const count = getCount();
+const path = Astro.url.pathname;
+const isActive = (p) => path === p;
+const iconClass = (active) => `h-5 w-5 ${active ? "text-[#7C3AED]" : "text-black"}`;
+const labelClass = (active) => `text-[10px] mt-0.5 ${active ? "text-[#7C3AED] font-semibold" : "text-black"}`;
+---
+<nav class="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-[#F0F0F0] h-[60px] flex items-stretch">
+  <a href="/" class="flex-1 flex flex-col items-center justify-center">
+    <Icon name="home" class={iconClass(isActive("/"))} />
+    <span class={labelClass(isActive("/"))}>Pagrindinis</span>
+  </a>
+  <button type="button" data-open-search-mobile class="flex-1 flex flex-col items-center justify-center">
+    <Icon name="search" class="h-5 w-5 text-black" />
+    <span class="text-[10px] mt-0.5 text-black">Ieškoti</span>
+  </button>
+  <a href="/cart/" class="flex-1 flex flex-col items-center justify-center relative">
+    <div class="relative">
+      <Icon name="clipboard" class={iconClass(isActive("/cart/"))} />
+      <span id="mn-count" class={"absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 rounded-full bg-[#7C3AED] text-white text-[9px] font-semibold flex items-center justify-center " + (count > 0 ? "" : "hidden")}>{count}</span>
+    </div>
+    <span class={labelClass(isActive("/cart/"))}>Sąrašas</span>
+  </a>
+  <a href="https://t.me/Vapelt_shop" target="_blank" rel="noopener noreferrer" class="flex-1 flex flex-col items-center justify-center">
+    <Icon name="send" class="h-5 w-5 text-black" />
+    <span class="text-[10px] mt-0.5 text-black">Telegram</span>
+  </a>
+</nav>
+
+<script>
+  const mn = document.getElementById("mn-count");
+  const sync = () => {
+    if (!mn) return;
+    const raw = localStorage.getItem("vapelt:my-list") || "[]";
+    try {
+      const n = JSON.parse(raw).reduce((s, i) => s + i.quantity, 0);
+      mn.textContent = String(n);
+      mn.classList.toggle("hidden", n <= 0);
+    } catch {}
+  };
+  // Le bouton Recherche mobile ouvre le même SearchDialog que le header.
+  document.querySelector("[data-open-search-mobile]")?.addEventListener("click", () =>
+    window.dispatchEvent(new CustomEvent("vapelt:search"))
+  );
+  window.addEventListener("vapelt:storage", sync);
+  window.addEventListener("storage", sync);
+</script>

@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://vapelt.dealsnows.com/sitemap-index.xml

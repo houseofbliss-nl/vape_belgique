@@ -1,0 +1,129 @@
+---
+// Layout de base VAPELT mobile — tête SEO + header + footer + nav basse.
+// Mobile-first, rendu dans le style du template astro-ecommerce (primary rouge).
+import "../styles/global.css";
+import Header from "../components/Header.astro";
+import Sidebar from "../components/Sidebar.astro";
+import Footer from "../components/Footer.astro";
+import MobileBottomNav from "../components/MobileBottomNav.astro";
+import SearchDialog from "../components/SearchDialog.astro";
+import { SITE_NAME, SITE_URL, SITE_TITLE, SITE_DESCRIPTION, SITE_LANG } from "../lib/site";
+
+interface Crumb {
+  name: string;
+  /** URL absolue ou relative (dernier item = sans lien, la page courante). */
+  url?: string;
+}
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Chemin canonique absolu (ex. /produktis/xyz). Par défaut on reprend l'URL courante. */
+  canonicalPath?: string;
+  /** Objet JSON-LD supplémentaire (SiteGraph / Produit / Ville…). */
+  jsonLd?: object;
+  /** Schema principal (OnlineStore par défaut). */
+  schema?: object;
+  /** Image sociale OG (URL absolue ou chemin local). Défaut = image de marque générée. */
+  ogImage?: string;
+  /** Type OG (website / product / article). Défaut website. */
+  ogType?: string;
+  /** Fil d'ariane → émet un BreadcrumbList JSON-LD + est repris dans og:title.log. */
+  breadcrumb?: Crumb[];
+  /** Ne pas afficher la barre basse mobile (ex. checkout). */
+  hideBottomNav?: boolean;
+  /** Balise robots noindex (pages utilitaires : panier, récap…) — exclues du référencement. */
+  noindex?: boolean;
+}
+
+const {
+  title = SITE_TITLE,
+  description = SITE_DESCRIPTION,
+  canonicalPath,
+  jsonLd,
+  schema,
+  ogImage = `${SITE_URL}/images/og-default.png`,
+  ogType = "website",
+  breadcrumb,
+  hideBottomNav = false,
+  noindex = false,
+} = Astro.props;
+
+const canonical = canonicalPath == null ? Astro.url.pathname : canonicalPath;
+const canonicalUrl = canonical.startsWith("http") ? canonical : `${SITE_URL}${canonical}`;
+
+const ogImageUrl = ogImage.startsWith("http") ? ogImage : `${SITE_URL}${ogImage}`;
+
+// BreadcrumbList JSON-LD (schema.org) si un fil d'ariane est fourni.
+const breadcrumbSchema = breadcrumb && breadcrumb.length > 0
+  ? {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: breadcrumb.map((c, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        name: c.name,
+        ...(c.url ? { item: c.url.startsWith("http") ? c.url : `${SITE_URL}${c.url}` } : {}),
+      })),
+    }
+  : null;
+
+const defaultSchema = {
+  "@context": "https://schema.org",
+  "@type": "OnlineStore",
+  name: SITE_NAME,
+  description: SITE_DESCRIPTION,
+  url: SITE_URL,
+  image: `${SITE_URL}/images/og-default.png`,
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "Gedimino pr. 1",
+    addressLocality: "Vilnius",
+    addressRegion: "Vilniaus apskritis",
+    postalCode: "01103",
+    addressCountry: "LT",
+  },
+  geo: { "@type": "GeoCoordinates", latitude: 54.6872, longitude: 25.2797 },
+};
+
+const pageSchema = schema ?? defaultSchema;
+const jsonLdObjects = [pageSchema, ...(jsonLd ? [jsonLd] : []), ...(breadcrumbSchema ? [breadcrumbSchema] : [])];
+---
+
+<!doctype html>
+<html lang={SITE_LANG}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    {noindex && <meta name="robots" content="noindex" />}
+    {
+      jsonLdObjects.map((o) => <script type="application/ld+json" set:html={JSON.stringify(o)} />)
+    }
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
+  </head>
+  <body>
+    <Header />
+    <Sidebar />
+    <main>
+      <slot />
+    </main>
+    <Footer />
+    <MobileBottomNav hide={hideBottomNav} />
+    <SearchDialog />
+  </body>
+</html>

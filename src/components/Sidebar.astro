@@ -1,0 +1,152 @@
+---
+// Tiroir latéral gauche — reproduction de Sidebar.tsx vapespot.
+// Niveau catégorie → accordéon : clic sur une catégorie déploie ses sous-catégories
+// (miniature du 1er produit du catalogue, label, compte produits) → lien vers la
+// page de sous-catégorie (avec filtres).
+import { TAXONOMY } from "../lib/taxonomy";
+import { getCount } from "../lib/store";
+import Icon from "./Icon.astro";
+
+const cats = TAXONOMY; // 4 catégories racines seules (plus « visi »)
+const listCount = getCount();
+const total = cats.reduce((s, c) => s + c.count, 0);
+---
+
+<div id="sidebar-backdrop" class="fixed inset-0 z-40 bg-black/40 opacity-0 pointer-events-none transition-opacity duration-200" data-sidebar-close></div>
+
+<aside
+  id="sidebar"
+  data-sidebar
+  class="fixed top-0 left-0 z-50 h-full w-[300px] sm:w-[340px] bg-white overflow-y-auto shadow-xl -translate-x-full transition-transform duration-200"
+>
+  <!-- Entête -->
+  <div class="px-5 pt-5 pb-4 flex items-center justify-between">
+    <a href="/" data-sidebar-close aria-label="VAPELT" class="inline-block">
+      <img src="/images/logo-vapelt.svg" alt="VAPELT" class="h-8 w-auto" />
+    </a>
+    <button type="button" data-sidebar-close aria-label="Uždaryti" class="p-1.5 text-black hover:opacity-70">
+      <Icon name="x" class="h-5 w-5" />
+    </button>
+  </div>
+
+  <div class="px-3 pb-4">
+    <!-- Home -->
+    <a href="/" data-sidebar-close class="flex items-center gap-3 px-2 py-2.5 hover:bg-[#F5F5F7] transition-colors">
+      <div class="h-10 w-10 rounded-full bg-[#F5F5F7] flex items-center justify-center overflow-hidden">
+        <Icon name="home" class="h-5 w-5 text-[#6E6E73]" strokeWidth={1.75} />
+      </div>
+      <span class="text-[15px] font-semibold text-black">Pagrindinis</span>
+    </a>
+
+    <!-- My List -->
+    <a href="/cart/" data-sidebar-close class="flex items-center gap-3 px-2 py-2.5 hover:bg-[#F5F5F7] transition-colors">
+      <div class="h-10 w-10 rounded-full bg-[#F5F5F7] flex items-center justify-center overflow-hidden">
+        <Icon name="clipboard" class="h-5 w-5 text-[#6E6E73]" strokeWidth={1.75} />
+      </div>
+      <span class="text-[15px] font-medium text-[#6E6E73] flex-1">Mano sąrašas</span>
+      <span id="sb-count" class={"min-w-[22px] h-[22px] px-1.5 rounded-full bg-[#7C3AED] text-white text-[11px] font-semibold flex items-center justify-center " + (listCount > 0 ? "" : "hidden")}>{listCount}</span>
+    </a>
+
+    {/* Section catégories — accordéon sous-catégories */}
+    <p class="px-2 pt-5 pb-2 text-[11px] font-semibold tracking-[0.1em] text-[#7C3AED]">KATEGORIJOS</p>
+
+    <div class="space-y-0.5">
+      {cats.map((cat) => (
+        <div class="group/cat" data-cat>
+          <button type="button" data-cat-toggle
+            class="w-full flex items-center gap-3 px-2 py-3 hover:bg-[#F5F5F7] transition-colors">
+            <img src={cat.image} alt="" loading="lazy" class="h-12 w-12 object-contain shrink-0" />
+            <span class="text-[15px] font-medium text-black flex-1 text-left truncate">{cat.label}</span>
+            <span class="text-xs font-semibold text-[#7C3AED]">{cat.count}</span>
+            <Icon name="chevron-right" class="h-[18px] w-[18px] text-neutral-400 shrink-0 transition-transform duration-200" strokeWidth={2} />
+          </button>
+
+          {/* Sous-catégories — masquées par défaut, dépliées au clic */}
+          <div data-cat-subs class="hidden pb-1">
+            {cat.subs.map((s) => (
+              <a href={`/kategorijos/${cat.id}/${s.key}/`} data-sidebar-close
+                class="flex items-center gap-3 py-2 pl-6 pr-3 ml-7 border-l-2 border-[#F0F0F0] hover:border-[#7C3AED] hover:bg-[#F8F8FA] transition-colors">
+                <img src={s.image} alt="" loading="lazy" class="h-8 w-8 object-contain shrink-0" />
+                <span class="text-[13px] font-medium text-neutral-700 flex-1 truncate">{s.label}</span>
+                <span class="text-[11px] text-neutral-500">{s.count}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+
+    {/* Section zones de livraison — Option A : un seul point d'entrée vers la page discover
+        des villes desservies (pas de carrousels villes partout sur le site). */}
+    <p class="px-2 pt-5 pb-2 text-[11px] font-semibold tracking-[0.1em] text-[#7C3AED]">PRISTATYMO ZONOS</p>
+    <a href="/miestai/" data-sidebar-close class="flex items-center gap-3 px-2 py-2.5 hover:bg-[#F5F5F7] transition-colors">
+      <div class="h-10 w-10 rounded-full bg-[#F5F5F7] flex items-center justify-center overflow-hidden">
+        <Icon name="truck" class="h-5 w-5 text-[#6E6E73]" strokeWidth={1.75} />
+      </div>
+      <span class="text-[15px] font-medium text-black flex-1">Pristatymo zonos</span>
+      <Icon name="chevron-right" class="h-[18px] w-[18px] text-neutral-400 shrink-0" strokeWidth={2} />
+    </a>
+
+    <a href="https://t.me/Vapelt_shop" target="_blank" rel="noopener noreferrer"
+      class="mt-6 flex items-center gap-3 p-4 bg-[#F5F5F7]">
+      <div class="h-10 w-10 rounded-full bg-black flex items-center justify-center text-white shrink-0">
+        <Icon name="send" class="h-5 w-5" strokeWidth={1.75} />
+      </div>
+      <div class="min-w-0">
+        <p class="text-[11px] text-[#6E6E73]">Susisiekite su mumis</p>
+        <p class="text-sm font-bold leading-tight text-black">Telegram</p>
+        <p class="text-[11px] text-[#6E6E73]">Atsakome greitai, 24/7</p>
+      </div>
+    </a>
+  </div>
+</aside>
+
+<script>
+  const sidebar = document.getElementById("sidebar");
+  const backdrop = document.getElementById("sidebar-backdrop");
+  const openBtn = document.getElementById("sidebar-open");
+  const closeBtns = document.querySelectorAll("[data-sidebar-close]");
+  const open = () => {
+    sidebar.classList.remove("-translate-x-full");
+    backdrop.classList.remove("opacity-0", "pointer-events-none");
+    document.body.style.overflow = "hidden";
+  };
+  const close = () => {
+    sidebar.classList.add("-translate-x-full");
+    backdrop.classList.add("opacity-0", "pointer-events-none");
+    document.body.style.overflow = "";
+  };
+  openBtn?.addEventListener("click", open);
+  closeBtns.forEach((el) => el.addEventListener("click", close));
+  backdrop.addEventListener("click", close);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
+
+  // Accordéon sous-catégories : un seul bloc ouvert à la fois.
+  document.querySelectorAll("[data-cat-toggle]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const subs = btn.parentElement.querySelector("[data-cat-subs]");
+      const icon = btn.querySelector("svg");
+      const isOpen = !subs.classList.contains("hidden");
+      sidebar.querySelectorAll("[data-cat-subs]").forEach((el) => el.classList.add("hidden"));
+      sidebar.querySelectorAll("[data-cat-toggle] svg").forEach((ic) => ic.classList.remove("rotate-180"));
+      if (!isOpen) {
+        subs.classList.remove("hidden");
+        icon?.classList.add("rotate-180");
+        subs.scrollIntoView({ block: "nearest" });
+      }
+    });
+  });
+
+  // Compteur panier sync
+  const sbCount = document.getElementById("sb-count");
+  const sync = () => {
+    const raw = localStorage.getItem("vapelt:my-list") || "[]";
+    try {
+      const n = JSON.parse(raw).reduce((s, i) => s + i.quantity, 0);
+      if (sbCount) { sbCount.textContent = String(n); sbCount.classList.toggle("hidden", n <= 0); }
+    } catch {}
+  };
+  window.addEventListener("vapelt:storage", sync);
+  window.addEventListener("storage", sync);
+  void group;
+</script>

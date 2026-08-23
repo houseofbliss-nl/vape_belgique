@@ -1,0 +1,54 @@
+---
+import { SITE_NAME, TELEGRAM_URL } from "../lib/site";
+---
+<footer class="mt-12 border-t border-neutral-200 bg-neutral-100 pb-24 md:pb-0">
+  <div class="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-4 py-10 md:grid-cols-4">
+    <div class="col-span-2 md:col-span-1">
+      <p class="mb-3 text-xl font-black tracking-tight text-neutral-900">{SITE_NAME}</p>
+      <p class="text-sm text-neutral-600">
+        Elektroninės cigaretės, vienkartiniai garintuvai ir e-skysčiai — pristatome visoje
+        Lietuvoje.
+      </p>
+    </div>
+
+    <div>
+      <p class="mb-3 text-sm font-semibold text-neutral-900">Kategorijos</p>
+      <ul class="space-y-2 text-sm text-neutral-600">
+        <li><a href="/kategorijos" class="hover:text-neutral-900">Visi produktai</a></li>
+        <li><a href="/kategorijos/vienkartiniai" class="hover:text-neutral-900">Vienkartiniai</a></li>
+        <li><a href="/kategorijos/esultys" class="hover:text-neutral-900">E-skysčiai</a></li>
+        <li><a href="/kategorijos/nicotine-pouches" class="hover:text-neutral-900">Nikotino pagalvėlės</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <p class="mb-3 text-sm font-semibold text-neutral-900">Nuorodos</p>
+      <ul class="space-y-2 text-sm text-neutral-600">
+        <li><a href="/apie" class="hover:text-neutral-900">Apie mus</a></li>
+        <li><a href="/zinios" class="hover:text-neutral-900">Naujienos</a></li>
+        <li><a href="/privacy" class="hover:text-neutral-900">Privatumo politika</a></li>
+        <li><a href="/cart" class="hover:text-neutral-900">Mano sąrašas</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <p class="mb-3 text-sm font-semibold text-neutral-900">Kontaktai</p>
+      <p class="mb-2 text-sm text-neutral-600">Užsakymai per Telegram:</p>
+      <a
+        href={TELEGRAM_URL}
+        target="_blank"
+        rel="noopener"
+        class="inline-flex items-center gap-2 whitespace-nowrap rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+      >
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
+        Susisiekite per Telegram
+      </a>
+    </div>
+  </div>
+
+  <div class="border-t border-neutral-200 py-5">
+    <p class="mx-auto max-w-6xl px-4 text-center text-xs text-neutral-500">
+      © {new Date().getFullYear()} {SITE_NAME}. Parduodama tik asmenims nuo 18 metų.
+    </p>
+  </div>
+</footer>

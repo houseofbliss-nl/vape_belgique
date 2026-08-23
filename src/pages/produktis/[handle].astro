@@ -1,0 +1,494 @@
+---
+// Page produit — mobile-first (image pleine dessus, détails dessous).
+// Packs ×2/×3/×5/×10 (packs.ts) + ajout au panier + ajouts liés.
+import Base from "../../layouts/Base.astro";
+import ProductCard from "../../components/ProductCard.astro";
+import AddToCart from "../../components/AddToCart.astro";
+import { products } from "../../data/products.json";
+import { BY_CAT_SUB, categoryByCat } from "../../lib/taxonomy";
+import { classify } from "../../lib/classify";
+import { formatPrice } from "../../lib/format";
+import { packOptions, packPrice } from "../../lib/packs";
+import { SITE_URL, SITE_NAME, ORG_ADDRESS } from "../../lib/site";
+import type { Product } from "../../lib/types";
+
+export function getStaticPaths() {
+  return products.map((p) => ({
+    params: { handle: p.handle },
+    props: { product: p },
+  }));
+}
+
+interface Props {
+  product: Product;
+}
+
+const { product } = Astro.props;
+// Packs : on retire le « ×1 » (unité simple) — la sélection commence à ×2
+// (décision utilisateur 22/08) → il reste 4 boutons : ×2 ×3 ×5 ×10.
+const options = packOptions(product.price_eur).filter((o) => o.qty !== 1);
+const byHandle = new Map(products.map((p) => [p.handle, p]));
+
+// Classement du produit (classifieur) → catégorie + sous-catégorie pour breadcrumb + related.
+const cls = classify({ title: product.title, description: product.description, tags: product.tags });
+const bucket = BY_CAT_SUB.get(`${cls.cat}::${cls.sub}`);
+const catNode = categoryByCat(cls.cat);
+
+// Produits liés : même sous-catégorie (sinon même vendor), hors lui-même.
+const related = (bucket
+  ? bucket.handles
+      .map((h) => byHandle.get(h))
+      .filter((p): p is NonNullable<typeof p> => Boolean(p) && p.handle !== product.handle)
+  : products.filter((p) => p.handle !== product.handle && p.vendor === product.vendor)
+)
+  .slice(0, 10);
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "Product",
+  name: product.title,
+  image: [product.image],
+  description: product.description.slice(0, 300),
+  brand: { "@type": "Brand", name: product.vendor },
+  offers: {
+    "@type": "Offer",
+    price: product.price_eur,
+    priceCurrency: "EUR",
+    availability: "https://schema.org/InStock",
+    url: `${SITE_URL}/produktis/${product.handle}`,
+  },
+};
+
+// Meta description CTR : titre — vendor — prix — extrait LT (1re phrase si courte, sinon début + …).
+const priceTag = formatPrice(product.price_eur);
+const cleanDesc = (product.description || "").replace(/\s+/g, " ").trim();
+const sentence = cleanDesc.match(/^(.{0,120}?)(?:\.|\?|!)( |$)/)?.[1]?.trim();
+const firstPhrase = sentence && sentence.length >= 30 ? sentence : cleanDesc.slice(0, 120).trimEnd();
+const metaDescription = `${product.title} — ${product.vendor}. ${priceTag}. ${firstPhrase}${firstPhrase ? "…" : ""} Užsakymas per Telegram.`.slice(0, 170);
+
+// Fil d'ariane → BreadcrumbList schema (même hiérarchie que le fil visible).
+const crumbs = [{ name: "Pradžia", url: "/" }];
+if (catNode) {
+  crumbs.push({ name: catNode.label, url: `/kategorijos/${catNode.id}` });
+  if (bucket) crumbs.push({ name: bucket.label, url: `/kategorijos/${bucket.cat}/${bucket.key}` });
+}
+crumbs.push({ name: product.title });
+---
+
+<Base
+  title={`${product.title} — ${SITE_NAME}`}
+  description={metaDescription}
+  canonicalPath={`/produktis/${product.handle}`}
+  schema={schema}
+  ogImage={product.image}
+  ogType="product"
+  breadcrumb={crumbs}
+>
+  <div class="mx-auto max-w-6xl px-3 py-4 md:py-8">
+    <!-- Fil d'ariane -->
+    <nav class="mb-4 flex items-center gap-1.5 text-xs text-neutral-500">
+      <a href="/" class="hover:text-neutral-900">Pradžia</a>
+      <span>/</span>
+      {catNode && (
+        <>
+          <a href={`/kategorijos/${catNode.id}`} class="hover:text-neutral-900">{catNode.label}</a>
+          <span>/</span>
+          {bucket && (
+            <>
+              <a href={`/kategorijos/${bucket.cat}/${bucket.key}`} class="hover:text-neutral-900">{bucket.label}</a>
+              <span>/</span>
+            </>
+          )}
+        </>
+      )}
+      <span class="truncate text-neutral-700">{product.title}</span>
+    </nav>
+
+    <div class="grid gap-6 lg:grid-cols-2 lg:gap-10 lg:items-start">
+      <!-- Image — la photo REMPLIT son bloc : hauteur naturelle (w-full h-auto),
+             pas de carré forcé qui recadre, pas de gris vide. object-contain sur fond
+             blanc propre. lg:self-start → texte aligné en face, jamais orphelin. -->
+      <div class="lg:self-start overflow-hidden rounded-lg bg-white">
+        <img src={product.image} alt={product.title} class="w-full h-auto object-contain mix-blend-multiply" width="800" height="800" />
+      </div>
+
+      <!-- Détails -->
+      <div>
+        <p class="mb-1 text-sm font-semibold text-primary md:text-base lg:text-sm">{product.vendor}</p>
+        <h1 class="text-2xl font-black leading-tight text-neutral-900 md:text-5xl lg:text-4xl">{product.title}</h1>
+
+        <p class="mt-3 text-3xl font-black text-neutral-900 md:text-5xl lg:text-4xl" translate="no">{formatPrice(product.price_eur)}</p>
+        <p class="text-sm text-neutral-500 md:text-base lg:text-sm">Pristatome visoje Lietuvoje</p>
+
+        <!-- Packs — DEUX rendus (décision 22/08) :
+             • MOBILE + TABLETTE (< lg) = tableau vapespot à puces rondes (lignes pleine largeur)
+             • DESKTOP (≥ lg) = « pile noire » conservée (boutons larges, sélection noire + coche) -->
+        <div class="mt-6">
+          <!-- ══ Version MOBILE / TABLETTE : tableau à puces (vapespot) ══ -->
+          <div class="lg:hidden border border-[#E8E8E8] bg-white">
+            <div class="flex items-center justify-between px-4 py-2.5 border-b border-[#E8E8E8]">
+              <p class="text-[13px] font-extrabold uppercase tracking-wide text-black md:text-[16px]">Pirkti pakuotėje</p>
+              <span class="text-[11px] text-[#9E9E9E] md:text-[13px]">Pasirinkite pakuotę</span>
+            </div>
+            <div class="divide-y divide-[#F0F0F0]">
+              {options.map((o) => {
+                const perUnit = o.price != null && o.qty > 1 ? o.price / o.qty : null;
+                return (
+                  <button
+                    type="button"
+                    data-pack
+                    data-qty={o.qty}
+                    data-table
+                    aria-pressed="false"
+                    class="vsp-row w-full flex items-center justify-between px-4 py-3 text-left transition-colors"
+                  >
+                    <span class="flex items-center gap-2.5 min-w-0">
+                      <span class="vsp-dot shrink-0 h-5 w-5 rounded-full border-2 flex items-center justify-center transition-colors">
+                        <span class="vsp-dot-inner h-2.5 w-2.5 rounded-full" />
+                      </span>
+                      <span class="text-[14px] font-bold text-black md:text-[18px]" translate="no">×{o.qty}</span>
+                      {o.bestValue && (
+                        <span class="text-[10px] font-extrabold uppercase tracking-wide text-[#5B3DF5] md:text-[12px]">
+                          Geriausia vertė
+                        </span>
+                      )}
+                    </span>
+                    <span class="text-right shrink-0">
+                      <span translate="no" class="block text-[14px] font-bold text-black md:text-[18px]">
+                        {o.price != null ? formatPrice(o.price) : "—"}
+                      </span>
+                      {perUnit != null && (
+                        <span translate="no" class="block text-[11px] font-semibold text-[#7C3AED] md:text-[14px]">
+                          {perUnit.toFixed(2).replace(".", ",")} €/vnt
+                        </span>
+                      )}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <!-- ══ Version DESKTOP : pile noire conservée ══ -->
+          <div class="hidden lg:block">
+            <p class="mb-2 text-sm font-semibold text-neutral-900">Pirkti pakuotėje</p>
+            <div class="flex flex-wrap gap-2">
+              {options.map((o) => {
+                const perUnit = o.price != null && o.qty > 1 ? o.price / o.qty : null;
+                return (
+                  <button
+                    type="button"
+                    data-pack
+                    data-qty={o.qty}
+                    aria-pressed="false"
+                    class="pack-btn relative min-w-[120px] flex-1 rounded-2xl px-4 py-3 text-center sm:max-w-[148px]"
+                  >
+                    <span class="block text-xl font-black leading-none" translate="no">
+                      ×{o.qty}
+                    </span>
+                    <span class="pack-price mt-1 block text-[15px] font-bold" translate="no">
+                      {o.price != null ? formatPrice(o.price) : "—"}
+                    </span>
+                    {perUnit != null && (
+                      <span class="pack-per mt-0.5 block text-[11px]" translate="no">
+                        {perUnit.toFixed(2).replace(".", ",")} €/vnt
+                      </span>
+                    )}
+                    {o.bestValue && (
+                      <span class="absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">
+                        Geriausia vertė
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <!-- Quantité + total -->
+        <div class="mt-6 flex items-center gap-3">
+          <div class="flex items-center rounded-lg border border-neutral-300">
+            <button type="button" data-qty-minus class="px-3 py-2 text-lg font-bold text-neutral-600">−</button>
+            <span id="qty" class="min-w-8 text-center text-base font-bold">1</span>
+            <button type="button" data-qty-plus class="px-3 py-2 text-lg font-bold text-neutral-600">＋</button>
+          </div>
+          <p class="ml-auto text-xl font-bold"><span id="total" translate="no">{formatPrice(product.price_eur)}</span></p>
+        </div>
+
+        <button
+          type="button"
+          id="addBtn"
+          class="mt-4 w-full rounded-lg bg-primary py-3.5 text-base font-bold text-white hover:bg-red-700"
+        >
+          Į sąrašą
+        </button>
+        <a
+          href="#"
+          id="telegramBtn"
+          target="_blank"
+          rel="noopener"
+          class="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-primary py-3 text-base font-bold text-primary hover:bg-red-50"
+        >
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
+          Užsakyti per Telegram
+        </a>
+      </div>
+    </div>
+
+    <!-- Description — en PLEINE LARGEUR sous le bloc photo+détails (PC :
+         retire le vide sous la photo et la colonne « orpheline » à droite).
+         Sur mobile/tablette elle reste sous la fiche, dans le flux normal. -->
+    <div class="mt-8 border-t border-neutral-100 pt-5">
+      <h2 class="mb-2 text-lg font-bold text-neutral-900 md:text-2xl">Aprašymas</h2>
+      <p class="text-sm leading-relaxed text-neutral-600 md:text-base">{product.description.slice(0, 500)}…</p>
+    </div>
+
+    <!-- Produits liés -->
+    {related.length > 0 && (
+      <section class="mt-12">
+        <h2 class="mb-4 text-2xl font-black text-neutral-900">Jums taip pat gali patikti</h2>
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 md:gap-4">
+          {related.map((p) => <ProductCard product={p} />)}
+        </div>
+      </section>
+    )}
+  </div>
+
+  <AddToCart />
+</Base>
+
+<script define:vars={{ prod: { id: product.id, title: product.title, price: product.price_eur } }}>
+  // ⚠️ Script AUTO-CONFONDU (self-contained) : Astro émet ce <script define:vars>
+  // en "classic script" non bundlé → les `import { ... } from "../../lib"` seraient
+  // une erreur de syntaxe en navigateur et tueraient tout le module (＋, packs, add,
+  // Telegram). On inline donc toute la logique nécessaire ici (mêmes multiplicateurs
+  // packs que vapespot).
+  const LIST_KEY = "vapelt:my-list";
+  function readList() {
+    try { return JSON.parse(window.localStorage.getItem(LIST_KEY) || "[]"); }
+    catch { return []; }
+  }
+  function writeList(next) {
+    window.localStorage.setItem(LIST_KEY, JSON.stringify(next));
+    window.dispatchEvent(new CustomEvent("vapelt:storage", { detail: { key: LIST_KEY } }));
+  }
+  function addToStore(productId, quantity) {
+    const current = readList();
+    const idx = current.findIndex((i) => i.productId === productId);
+    const next = idx >= 0
+      ? current.map((i, n) => n === idx ? { ...i, quantity: i.quantity + quantity } : i)
+      : [...current, { productId, quantity }];
+    writeList(next);
+    return next;
+  }
+
+  // Pack pricing VapeSpot (mêmes multiplicateurs exacts).
+  const PACK_TIERS = [
+    { qty: 2, mult: 0.90925622840516457 },
+    { qty: 3, mult: 0.78802570103655213 },
+    { qty: 5, mult: 0.72740498272413165 },
+    { qty: 10, mult: 0.6364793598836152 },
+  ];
+  function isPackQty(q) { return PACK_TIERS.some((t) => t.qty === q); }
+  function packOf(unit, q) {
+    const tier = PACK_TIERS.find((t) => t.qty === q);
+    if (!tier) return unit;
+    return Math.round(unit * q * tier.mult * 100) / 100;
+  }
+  function virtualLevelMult(q) {
+    if (q <= 1 || q >= PACK_TIERS[PACK_TIERS.length - 1].qty || isPackQty(q)) return null;
+    let lower = null, upper = null;
+    for (const t of PACK_TIERS) {
+      if (t.qty < q) lower = t;
+      else if (t.qty > q) { upper = t; break; }
+    }
+    if (!lower || !upper) return null;
+    const t = (q - lower.qty) / (upper.qty - lower.qty);
+    return lower.mult + t * (upper.mult - lower.mult);
+  }
+  function packPrice(unit, q) {
+    if (unit == null) return null;
+    if (q <= 1) return unit;
+    const memo = new Map([[0, 0]]);
+    for (let n = 1; n <= q; n++) {
+      let best = Infinity;
+      for (const piece of [1, ...PACK_TIERS.map((t) => t.qty)]) {
+        if (piece > n) continue;
+        const cand = (memo.get(n - piece) ?? 0) + packOf(unit, piece);
+        if (cand < best) best = cand;
+      }
+      memo.set(n, best);
+    }
+    const composed = memo.get(q);
+    const mult = virtualLevelMult(q);
+    if (mult != null) {
+      const virtual = Math.round(unit * q * mult * 100) / 100;
+      return Math.min(composed, virtual);
+    }
+    return composed;
+  }
+
+  // Message Telegram de commande (porté de telegram.ts) + URL.
+  const TELEGRAM_HANDLE = "Vapelt_shop";
+  function fmt(p) {
+    if (p == null) return "Kaina pagal užklausą";
+    return `${p.toFixed(2).replace(".", ",")} €`;
+  }
+  function buildTelegramMessage(lines, deliveryAddress, deliveryMethod) {
+    if (!lines.length) return "Sveiki! Norėčiau užsisakyti VAPELT parduotuvėje.";
+    const date = new Date().toLocaleDateString("lt-LT", { day: "2-digit", month: "long", year: "numeric" });
+    const divider = "─────────────────────────";
+    const header = "🛒  NAUJAS UŽSAKYMAS — VAPELT\n📅  " + date;
+    const productParts = lines.map((l, i) => {
+      const totalNum = packPrice(l.product.price, l.quantity) ?? 0;
+      const total = l.product.price == null ? "—" : fmt(totalNum);
+      const effUnit = l.quantity > 0 && l.product.price != null ? totalNum / l.quantity : l.product.price;
+      const unit = l.product.price == null ? "Kaina pagal užklausą" : fmt(effUnit);
+      const isPack = isPackQty(l.quantity);
+      return `${i + 1}. ${l.product.title}\n     ${unit} × ${l.quantity} = ${total}${isPack ? "  (paketas iš " + l.quantity + ")" : ""}`;
+    }).join("\n\n");
+    const sum = lines.reduce((s, l) => s + (packPrice(l.product.price, l.quantity) ?? 0), 0);
+    const totalLine = "IŠ VISO:  " + fmt(sum);
+    const addressSection = (deliveryAddress || "").trim()
+      ? "🚚  PRISTATYMO ADRESAS\n\n    " + (deliveryAddress || "").trim()
+      : "🚚  PRISTATYMO ADRESAS\n\n    Nenurodytas";
+    const deliveryMethodSection = deliveryMethod === "courier"
+      ? ["🛵  PRISTATYMO BŪDAS", "    Kurjeriu — paprastai 30 min–2 val. iki durų.", "    (Arba paštu, jei pageidaujama.)"].join("\n")
+      : ["📮  PRISTATYMO BŪDAS", "    Lietuvos paštu — 1–3 darbo dienos."].join("\n");
+    const payment = [
+      "💳  APMOKĖJIMAS",
+      "    Bankiniu pavedimu :  " + fmt(sum),
+      "    Kriptovaliuta :      " + fmt(sum * 0.9) + "  (sutaupote 10%)",
+      "    Apmokėjimas reikalingas prieš pristatymą.",
+    ].join("\n");
+    const footer = "Prašome atsakyti, kad patvirtintumėte užsakymą. Ačiū! 🙏";
+    return [header, divider, "📦  UŽSAKYMAS\n", productParts, divider, totalLine, divider, addressSection, divider, deliveryMethodSection, divider, payment, divider, footer].join("\n");
+  }
+  function buildTelegramUrl(message) {
+    return `https://t.me/${TELEGRAM_HANDLE}?text=${encodeURIComponent(message)}`;
+  }
+
+  const qtyEl = document.getElementById("qty");
+  const totalEl = document.getElementById("total");
+  const addBtn = document.getElementById("addBtn");
+  const telegramBtn = document.getElementById("telegramBtn");
+  let qty = 1;
+
+  const packButtons = Array.from(document.querySelectorAll("[data-pack]"));
+
+  function money(p) {
+    return p == null ? "—" : `${p.toFixed(2).replace(".", ",")} €`;
+  }
+
+  function render() {
+    if (qtyEl) qtyEl.textContent = String(qty);
+    const p = packPrice(prod.price, qty);
+    if (totalEl) totalEl.textContent = money(p);
+  }
+
+  packButtons.forEach((b) =>
+    b.addEventListener("click", () => {
+      qty = Number(b.dataset.qty);
+      // Sélection visuelle SYNC sur les deux rendus (tableau mobile → vsp-selected,
+      // pile noire desktop → pack-selected) à partir de la quantité active.
+      packButtons.forEach((x) => {
+        const active = Number(x.dataset.qty) === qty;
+        const isTable = x.hasAttribute("data-table");
+        x.classList.toggle("pack-selected", active && !isTable);
+        x.classList.toggle("vsp-selected", active && isTable);
+        x.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+      render();
+    })
+  );
+
+  document.querySelectorAll("[data-qty-minus]").forEach((b) =>
+    b.addEventListener("click", () => {
+      qty = Math.max(1, qty - 1);
+      render();
+    })
+  );
+  document.querySelectorAll("[data-qty-plus]").forEach((b) =>
+    b.addEventListener("click", () => {
+      qty = Math.min(10, qty + 1);
+      render();
+    })
+  );
+
+  addBtn?.addEventListener("click", () => {
+    addToStore(prod.id, qty);
+    const original = addBtn.textContent;
+    addBtn.textContent = "✓ Įdėta";
+    setTimeout(() => (addBtn.textContent = original), 1200);
+  });
+
+  // Lien Telegram : message direct avec ce produit + quantité.
+  telegramBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    const lines = [{ product: prod, quantity: qty }];
+    const msg = buildTelegramMessage(lines, "", "courier");
+    window.open(buildTelegramUrl(msg), "_blank", "noopener");
+  });
+</script>
+
+<style>
+  /* Packs « pile noire » — état par défaut blanc bordé, survol assombrit */
+  .pack-btn {
+    border: 1.5px solid #e5e5ea;
+    background: #fff;
+    color: #111;
+    transition: border-color 0.15s, background 0.15s, color 0.15s, box-shadow 0.15s;
+  }
+  .pack-btn:hover {
+    border-color: #111;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  }
+  /* Sélectionné : fond noir, texte blanc, coche en coin */
+  .pack-btn.pack-selected {
+    border-color: #111;
+    background: #111;
+    color: #fff;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+  }
+  .pack-btn .pack-price { color: #111; }
+  .pack-btn.pack-selected .pack-price { color: #fff; }
+  .pack-btn .pack-per { color: #9e9e9e; }
+  .pack-btn.pack-selected .pack-per { color: rgba(255, 255, 255, 0.65); }
+  .pack-btn.pack-selected::after {
+    content: "✓";
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    background: #fff;
+    color: #111;
+    font-size: 11px;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  /* Tableau packs mobile/tablette (style vapespot) — puces rondes */
+  .vsp-row:hover { background: #fafafa; }
+  .vsp-row.vsp-selected { background: #f0eeff; }
+  .vsp-dot {
+    border-color: #c4b8f0;
+    background: #fff;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .vsp-dot-inner {
+    background: #fff;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .vsp-row.vsp-selected .vsp-dot {
+    border-color: #5b3df5;
+    background: #5b3df5;
+  }
+  .vsp-row.vsp-selected .vsp-dot-inner { opacity: 1; }
+</style>

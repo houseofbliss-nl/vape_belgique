@@ -1,0 +1,19 @@
+---
+import Base from "../layouts/Base.astro";
+import { SITE_NAME } from "../lib/site";
+---
+<Base title={`Privatumo politika — ${SITE_NAME}`} canonicalPath="/privacy">
+  <div class="mx-auto max-w-3xl px-4 py-10">
+    <h1 class="text-3xl font-black text-neutral-900 md:text-5xl">Privatumo politika</h1>
+    <p class="mt-4 text-sm leading-relaxed text-neutral-600">
+      {SITE_NAME} gerbia Jūsų privatumą. Ši svetainė nerenka ir nesaugo asmeninių duomenų
+      serveriuose. Užsakymo duomenys (pasirinkti produktai, pristatymo adresas) pateikiami
+      tiesiogiai per Telegram privačiu pokalbiu su mūsų komanda ir naudojami tik užsakymo
+      įvykdymui.
+    </p>
+    <p class="mt-3 text-sm leading-relaxed text-neutral-600">
+      Asmenims iki 18 metų prekių neparduodame. Pateikdami užsakymą patvirtinate, kad esate
+      pilnametis.
+    </p>
+  </div>
+</Base>

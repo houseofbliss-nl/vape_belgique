@@ -1,0 +1,154 @@
+---
+// Page ville — SEO local : livraison dans la ville, FAQ, autres villes, geo.
+// Enrichie (page villes modèle steroidskaufen) :
+//   • grille « Populiariausi produktai » (même style que l'accueil)
+//   • contenu local unique par ville (region, population, livraison)
+//   • AddToCart pour que les boutons des cartes fonctionnent.
+import Base from "../../layouts/Base.astro";
+import cities from "../../data/cities.json";
+import ProductCard from "../../components/ProductCard.astro";
+import AddToCart from "../../components/AddToCart.astro";
+import { products } from "../../data/products.json";
+import { SITE_NAME, SITE_URL, TELEGRAM_URL } from "../../lib/site";
+import type { City } from "../../lib/types";
+
+export function getStaticPaths() {
+  return cities.map((c) => ({ params: { slug: c.slug }, props: { city: c } }));
+}
+
+interface Props {
+  city: City;
+}
+
+const { city } = Astro.props;
+const others = cities.filter((c) => c.slug !== city.slug);
+// Produits en vitrine — mêmes que l'accueil (cohérence de marque).
+const showProducts = products.slice(0, 12);
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  name: `VAPELT — ${city.region} apskritis`,
+  url: `${SITE_URL}/miestai/${city.slug}`,
+  description: `Elektroninių cigarečių ir vapingo pristatymas ${city.name}. Užsakymas per Telegram.`,
+  areaServed: { "@type": "City", name: city.name },
+  geo: { "@type": "GeoCoordinates", latitude: city.lat, longitude: city.lng },
+};
+
+// FAQPage JSON-LD — même contenu que la FAQ visible (rich results « FAQ » de Google).
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: `Ar pristatote į ${city.name}?`,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: `Taip! VAPELT pristato elektronines cigaretes, vienkartinius garintuvus, e-skysčius ir nikotino pagalvėles kurjeriu į ${city.name} ir aplinkines gyvenvietes — paprastai per 30 min – 2 val.`,
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Kaip užsisakyti?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Pasirinkite produktus, pereikite prie užsakymo apžvalgos ir pateikite užsakymą per Telegram @Vapelt_shop — atsakysime patvirtinimu.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Kokie mokėjimo būdai?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Bankinis pavedimas (SEPA), banko kortelė, kripto valiuta arba dovanų kuponas. Apmokėti reikia prieš pristatymą.",
+      },
+    },
+  ],
+};
+---
+
+<Base
+  title={`Vapingo pristatymas ${city.name} — ${SITE_NAME}`}
+  description={`Elektroninės cigaretės, vienkartiniai garintuvai ir e-skysčiai su pristatymu į ${city.name}. Užsisakykite lengvai per Telegram @Vapelt_shop.`}
+  canonicalPath={`/miestai/${city.slug}`}
+  schema={schema}
+  jsonLd={faqSchema}
+>
+  <div class="mx-auto max-w-6xl px-4 py-8">
+    <h1 class="text-3xl font-black leading-tight text-neutral-900 md:text-5xl">
+      Vapingo pristatymas {city.name}
+    </h1>
+    <p class="mt-3 max-w-2xl text-neutral-600">
+      VAPELT pristato elektronines cigaretes, vienkartinius garintuvus, e-skysčius ir nikotino
+      pagalvėles tiesiai į duris {city.name}. Užsakymas vyksta greitai ir patogiai per Telegram.
+      Aptarnaujame visą {city.region} apskritį ir aplinkines gyvenvietes — kurjeriu arba paštu.
+    </p>
+
+    <!-- Chiffre local (population) — unique par city -->
+    <p class="mt-3 text-sm text-neutral-500">
+      {city.name} turi apie {city.population.toLocaleString("lt-LT")} gyventojų, todėl kurjerio
+      pristatymas po miestą paprastai užtrunka 30 min – 2 val.
+    </p>
+
+    <a
+      href={TELEGRAM_URL}
+      target="_blank"
+      rel="noopener"
+      class="mt-5 inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white hover:bg-red-700"
+    >
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
+      Užsisakyti pristatymą {city.name}
+    </a>
+
+    <!-- Populiariausi produktai (grille, même style que l'accueil) -->
+    <section class="mt-10">
+      <h2 class="mb-4 text-2xl font-black text-neutral-900">Populiariausi produktai</h2>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 md:gap-4">
+        {showProducts.map((p) => <ProductCard product={p} />)}
+      </div>
+    </section>
+
+    <!-- FAQ locale -->
+    <section class="mt-10">
+      <h2 class="mb-4 text-2xl font-black text-neutral-900">Dažnai užduodami klausimai</h2>
+      <div class="space-y-4">
+        <div class="rounded-lg border border-neutral-200 p-4">
+          <p class="font-semibold text-neutral-900">Ar pristatote į {city.name}?</p>
+          <p class="mt-1 text-sm text-neutral-600">
+            Taip! Pristatome kurjeriu į {city.name} ir aplinkines gyvenvietes — paprastai per 30 min – 2 val.
+          </p>
+        </div>
+        <div class="rounded-lg border border-neutral-200 p-4">
+          <p class="font-semibold text-neutral-900">Kaip užsisakyti?</p>
+          <p class="mt-1 text-sm text-neutral-600">
+            Pasirinkite produktus, pereikite prie užsakymo ir pateikite jį per Telegram — atsakysime patvirtinimu.
+          </p>
+        </div>
+        <div class="faq-item rounded-lg border border-neutral-200 p-4">
+          <p class="font-semibold text-neutral-900">Kokie mokėjimo būdai?</p>
+          <p class="mt-1 text-sm text-neutral-600">
+            Bankinis pavedimas (SEPA), banko kortelė, kripto valiuta arba dovanų kuponas. Apmokėti reikia prieš pristatymą.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Autres cities -->
+    <section class="mt-10">
+      <h2 class="mb-4 text-2xl font-black text-neutral-900">Pristatome ir į kitus miestus</h2>
+      <div class="flex flex-wrap gap-2">
+        {others.map((c) => (
+          <a
+            href={`/miestai/${c.slug}`}
+            class="rounded-full border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:border-primary hover:text-primary"
+          >
+            {c.name}
+          </a>
+        ))}
+      </div>
+    </section>
+  </div>
+
+  <AddToCart />
+</Base>

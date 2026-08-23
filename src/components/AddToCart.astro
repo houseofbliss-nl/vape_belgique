@@ -1,0 +1,70 @@
+---
+// Script partagé : lie les boutons d'ajout au panier.
+// • [data-add-to-list]  → ajoute 1 unité
+// • [data-add-pack] + [data-pack-qty]  → ajoute DIRECTEMENT le pack (×2/×3/×5/×10)
+// À inclure une seule fois par page (pré-rendu, progressive-enhance).
+---
+<script>
+  import { add, onStorageChanged } from "../lib/store";
+
+  let toastEl = null;
+  function showToast(msg: string) {
+    if (!toastEl) {
+      toastEl = document.createElement("div");
+      toastEl.id = "vape-toast";
+      toastEl.style.cssText = "position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#0A0A0A;color:#fff;padding:12px 20px;font-size:14px;font-weight:600;border-radius:10px;z-index:60;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.25)";
+      document.body.appendChild(toastEl);
+    }
+    toastEl.textContent = msg;
+    toastEl.style.opacity = "1";
+    clearTimeout((toastEl as any)._t);
+    (toastEl as any)._t = setTimeout(() => { toastEl.style.opacity = "0"; }, 1600);
+  }
+
+  function bind() {
+    // Pack cliquable → ajout direct de la quantité du pack
+    document.querySelectorAll<HTMLButtonElement>("[data-add-pack]").forEach((btn) => {
+      if (btn.dataset.boundPack) return;
+      btn.dataset.boundPack = "1";
+      btn.addEventListener("click", () => {
+        const id = Number(btn.dataset.addPack);
+        const qty = Number(btn.dataset.packQty || 1);
+        if (Number.isNaN(id) || id <= 0) return;
+        add(id, qty);
+        btnsFeedback(btn);
+      });
+    });
+
+    // Unité simple
+    document.querySelectorAll<HTMLButtonElement>("[data-add-to-list]").forEach((btn) => {
+      if (btn.dataset.bound) return;
+      btn.dataset.bound = "1";
+      btn.addEventListener("click", () => {
+        const id = Number(btn.dataset.addToList);
+        if (Number.isNaN(id)) return;
+        add(id, 1);
+        btnsFeedback([btn]);
+      });
+    });
+  }
+
+  let feedbackTimer = new Map<HTMLElement, { txt: string; cls: string }>();
+  function btnsFeedback(btns: HTMLElement | HTMLElement[]) {
+    const arr = Array.isArray(btns) ? btns : [btns];
+    arr.forEach((btn) => {
+      const saved = { txt: btn.textContent || "", cls: btn.className };
+      btn.textContent = "✓ Įdėta";
+      btn.classList.add("!bg-[#7C3AED]", "!border-[#7C3AED]", "!text-white");
+      clearTimeout(feedbackTimer.get(btn));
+      feedbackTimer.set(btn, setTimeout(() => {
+        btn.textContent = saved.txt;
+        btn.className = saved.cls;
+      }, 1200) as any);
+    });
+    showToast(arr.length ? "Pridėta į sąrašą ✓" : "");
+  }
+
+  document.addEventListener("astro:page-load", bind);
+  bind();
+  onStorageChanged(() => bind());
+</script>

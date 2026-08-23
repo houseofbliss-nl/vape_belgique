@@ -1,0 +1,23 @@
+---
+import Base from "../layouts/Base.astro";
+import { SITE_NAME } from "../lib/site";
+---
+<Base title={`Žinios — ${SITE_NAME}`} canonicalPath="/zinios">
+  <div class="mx-auto max-w-3xl px-4 py-10">
+    <h1 class="text-3xl font-black text-neutral-900 md:text-5xl">Žinios</h1>
+    <p class="mt-4 text-neutral-600">
+      Čia rasite naujienas apie vapingą, naujus produktus ir pasiūlymus. Sekite mus, kad nieko
+      nepraleistumėte.
+    </p>
+    <div class="mt-8 space-y-4">
+      <div class="rounded-lg border border-neutral-200 p-4">
+        <p class="font-bold text-neutral-900">Nauji vienkartiniai garintuvai</p>
+        <p class="mt-1 text-sm text-neutral-600">Atnaujintas vienkartinių garintuvų asortimentas — dideli puffų skaičiai ir nauji skoniai.</p>
+      </div>
+      <div class="rounded-lg border border-neutral-200 p-4">
+        <p class="font-bold text-neutral-900">Pristatymas visoje Lietuvoje</p>
+        <p class="mt-1 text-sm text-neutral-600">Dabar pristatome į visus didžiuosius Lietuvos miestus — kurjeriu arba paštu.</p>
+      </div>
+    </div>
+  </div>
+</Base>

@@ -1,0 +1,23 @@
+---
+// Réassurance — reproduction EXACTE de Reassurance.tsx vapespot (icônes lucide Truck/ShieldCheck/BadgeCheck/Send).
+import Icon from "./Icon.astro";
+const BLOCKS = [
+  { icon: "truck", title: "Kurjerio pristatymas", subtitle: "Paprastai 30 min–2 val., arba paštu." },
+  { icon: "shield-check", title: "Saugus apmokėjimas", subtitle: "Bankinis pavedimas ir kriptovaliuta." },
+  { icon: "badge-check", title: "100% autentiška", subtitle: "Tikri produktai iš geriausių prekių ženklų." },
+  { icon: "send", title: "Telegram palaikymas", subtitle: "Rašykite mums 24/7 per Telegram." },
+];
+---
+<section class="grid grid-cols-2 lg:grid-cols-4 gap-[2px] bg-[#E0DAFF]">
+  {BLOCKS.map((b) => (
+    <div class="bg-[#F0EEFF] flex flex-col items-start gap-3 p-5 lg:p-8">
+      <div class="h-12 w-12 lg:h-14 lg:w-14 rounded-full bg-[#DDD6FF] flex items-center justify-center shrink-0">
+        <Icon name={b.icon} class="h-6 w-6 lg:h-7 lg:w-7 text-[#5B3DF5]" strokeWidth={1.75} />
+      </div>
+      <div>
+        <p class="text-[15px] lg:text-[18px] font-bold text-black leading-tight">{b.title}</p>
+        <p class="text-[13px] lg:text-[15px] text-[#6E6E73] mt-1 leading-snug">{b.subtitle}</p>
+      </div>
+    </div>
+  ))}
+</section>
