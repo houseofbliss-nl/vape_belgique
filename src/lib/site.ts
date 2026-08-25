@@ -7,6 +7,10 @@ export const SITE_URL = "https://vapelt.dealsnows.com";
 export const SITE_LANG = "lt";
 export const TELEGRAM_URL = `https://t.me/${TELEGRAM_HANDLE}`;
 
+/** Pays de livraison (code ISO 3166-1 alpha-2) — utilisé dans le schema offers
+ *  (shippingDetails + hasMerchantReturnPolicy). À adapter pour FI/EE/BE. */
+export const SHIPPING_COUNTRY = "LT";
+
 /** Description par défaut (SEO) — lituanien. */
 export const SITE_DESCRIPTION =
   "VAPELT — elektroninės cigaretės, vienkartiniai garintuvai, e-skysčiai ir nikotino pagalvėlės. Pristatome visoje Lietuvoje. Užsakymas per Telegram.";

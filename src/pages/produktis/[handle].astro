@@ -9,7 +9,7 @@ import { BY_CAT_SUB, categoryByCat } from "../../lib/taxonomy";
 import { classify } from "../../lib/classify";
 import { formatPrice } from "../../lib/format";
 import { packOptions, packPrice } from "../../lib/packs";
-import { SITE_URL, SITE_NAME, ORG_ADDRESS } from "../../lib/site";
+import { SITE_URL, SITE_NAME, ORG_ADDRESS, SHIPPING_COUNTRY } from "../../lib/site";
 import type { Product } from "../../lib/types";
 
 export function getStaticPaths() {
@@ -56,6 +56,28 @@ const schema = {
     priceCurrency: "EUR",
     availability: "https://schema.org/InStock",
     url: `${SITE_URL}/produktis/${product.handle}`,
+    // Livraison réelle : gratuite/incluse, dans toute la Lituanie (LT).
+    // Article page produit + cart + miestai : "kurjeriu 30 min–2 val." et "Lietuvos paštu 1–3 d. d."
+    shippingDetails: {
+      "@type": "OfferShippingDetails",
+      shippingRate: { "@type": "MonetaryAmount", value: "0", currency: "EUR" },
+      shippingDestination: { "@type": "DefinedRegion", addressCountry: SHIPPING_COUNTRY },
+      deliveryTime: {
+        "@type": "ShippingDeliveryTime",
+        transitTime: {
+          "@type": "QuantitativeValue",
+          minValue: 0.5,
+          maxValue: 2,
+          unitCode: "HUR",
+        },
+      },
+    },
+    // Politique réelle : pas de retour/échange (produits consommables).
+    hasMerchantReturnPolicy: {
+      "@type": "MerchantReturnPolicy",
+      applicableCountry: SHIPPING_COUNTRY,
+      returnPolicyCategory: "https://schema.org/MerchantReturnNotPermitted",
+    },
   },
 };
 
