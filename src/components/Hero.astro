@@ -1,16 +1,17 @@
 ---
-// Hero — structure IDENTIQUE à VAPELT (voir vapelt-mobile/src/components/Hero.astro) :
-// <picture> desktop ≥768px / mobile sinon, image `w-full h-auto` (hauteur NATURELLE
-// de la photo, aucun vh ni object-cover → hauteur réduite, pas de photo interminable).
-// Contenu positionné dans la zone gauche, texte bien visible, CTA noir + jaune or.
+// Hero — structure IDENTIQUE à VAPELT (hauteur naturelle w-full h-auto).
+// Contenu qui REMPLIT la photo : texte remonté vers le haut, grande police,
+// réparti verticalement pour ne plus laisser le haut/bas vides.
+// CTA noir + texte JAUNE OR forcé en inline (Tailwind ne purge pas l'inline).
 import { t, p } from "../lib/i18n";
 import type { Lang } from "../lib/i18n";
 interface Props { lang: Lang; }
 const { lang } = Astro.props;
 const collectionLink = p(lang, "/kategorijos/");
+const YELLOW = "#F2C94C";
 ---
 <section class="relative w-full">
-  <!-- Image : une seule selon le viewport, hauteur naturelle (comme VAPELT) -->
+  <!-- Image : une seule selon le viewport, hauteur naturelle -->
   <picture>
     <source media="(min-width: 768px)" srcset="/images/hero-be-desktop.png" />
     <img
@@ -21,34 +22,35 @@ const collectionLink = p(lang, "/kategorijos/");
       class="w-full h-auto block" />
   </picture>
 
-  <!-- Léger dégradé à gauche pour la lisibilité, sans masquer l'image -->
-  <div class="absolute inset-0 bg-gradient-to-r from-black/50 via-black/20 to-transparent"></div>
+  <!-- Dégradé sombre à gauche pour la lisibilité -->
+  <div class="absolute inset-0 bg-gradient-to-r from-black/55 via-black/25 to-transparent"></div>
 
-  <!-- Contenu — zone gauche (desktop) / gauche avec marge (mobile), pas au milieu -->
-  <div class="absolute inset-0 flex items-center">
+  <!-- Contenu : remonte vers le HAUT, gros texte, remplit la hauteur -->
+  <div class="absolute inset-0 flex flex-col justify-start pt-[16%] md:pt-[14%]">
     <div class="w-full max-w-7xl mx-auto px-4 md:px-10">
-      <div class="max-w-[560px] text-white">
-        <h1 class="text-[32px] md:text-[48px] lg:text-[56px] font-extrabold leading-[1.08] drop-shadow">
+      <div class="max-w-[620px] text-white">
+        <h1 class="text-[40px] leading-[1.05] md:text-[58px] lg:text-[66px] font-extrabold drop-shadow">
           {t(lang, "hero.title")}
         </h1>
-        <p class="mt-4 md:mt-5 text-[17px] md:text-[22px] font-medium text-white/95 drop-shadow leading-snug">
+        <p class="mt-5 md:mt-7 text-[22px] md:text-[28px] lg:text-[30px] font-semibold text-white/95 drop-shadow leading-snug">
           {t(lang, "hero.subtitle")}
         </p>
-        <p class="mt-2 md:mt-3 text-[14px] md:text-[17px] text-white/90 drop-shadow">
+        <p class="mt-3 md:mt-4 text-[17px] md:text-[20px] lg:text-[22px] text-white/90 drop-shadow">
           {t(lang, "hero.desc")}
         </p>
 
         <!-- Arguments -->
-        <div class="mt-4 md:mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] md:text-[16px] font-semibold text-white/95">
-          <span class="inline-flex items-center gap-1.5"><svg class="h-4 w-4 text-[#F2C94C]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>{t(lang, "hero.arg1")}</span>
-          <span class="inline-flex items-center gap-1.5"><svg class="h-4 w-4 text-[#F2C94C]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>{t(lang, "hero.arg2")}</span>
-          <span class="inline-flex items-center gap-1.5"><svg class="h-4 w-4 text-[#F2C94C]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 6V4H3v13h3"/><path d="M7 6h8"/><path d="M16 10h5l3 3v3h-2"/><circle cx="8" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg>{t(lang, "hero.arg3")}</span>
+        <div class="mt-5 md:mt-7 flex flex-wrap items-center gap-x-6 gap-y-3 text-[15px] md:text-[18px] font-semibold text-white/95">
+          <span class="inline-flex items-center gap-2"><svg class="h-5 w-5" style={`color:${YELLOW}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>{t(lang, "hero.arg1")}</span>
+          <span class="inline-flex items-center gap-2"><svg class="h-5 w-5" style={`color:${YELLOW}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>{t(lang, "hero.arg2")}</span>
+          <span class="inline-flex items-center gap-2"><svg class="h-5 w-5" style={`color:${YELLOW}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 6V4H3v13h3"/><path d="M7 6h8"/><path d="M16 10h5l3 3v3h-2"/><circle cx="8" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg>{t(lang, "hero.arg3")}</span>
         </div>
 
-        <!-- CTA → collection (noir + texte jaune or) -->
-        <div class="mt-5 md:mt-7">
+        <!-- CTA → collection : noir + texte JAUNE OR (inline garanti) -->
+        <div class="mt-6 md:mt-8">
           <a href={collectionLink}
-            class="inline-flex items-center justify-center rounded-lg bg-black px-7 py-3.5 text-sm md:text-base font-bold text-[#F2C94C] hover:bg-neutral-900 transition-colors">
+            style={`background:#000;color:${YELLOW}`}
+            class="inline-flex items-center justify-center rounded-lg px-7 py-4 text-base md:text-lg font-bold hover:opacity-90 focus:outline-none transition-opacity">
             {t(lang, "hero.cta")}
           </a>
         </div>
