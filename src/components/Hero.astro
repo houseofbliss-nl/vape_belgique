@@ -1,55 +1,60 @@
 ---
-// Hero — images desktop_belgique.png (≥768px) / mobile_belgique.png (mobile)
-// comme fond EXACT ; texte/icônes/bouton superposés en HTML/CSS (pas intégrés).
-// Responsive : bloc de contenu à gauche sur desktop, compact et centré sur mobile.
-// Multilingue : textes via t(lang, "hero.*").
+// Hero — <picture> (desktop ≥768px / mobile sinon), image en COUVERTURE remplit
+// toute la zone selon le viewport : hauteur dynamique (min-h 85vh desktop / 78vh
+// mobile) avec object-cover → plus aucun vide en haut/bas, le texte est grand
+// et réparti. Multilingue via t(lang, "hero.*").
 import { t, p } from "../lib/i18n";
 import type { Lang } from "../lib/i18n";
 interface Props { lang: Lang; }
 const { lang } = Astro.props;
 const collectionLink = p(lang, "/kategorijos/");
 ---
-<section class="relative w-full overflow-hidden">
-  <!-- Fond : <picture> rend UNE SEULE image selon le viewport
-       (≥768px → desktop, sinon mobile). Aucune superposition possible. -->
-  <picture>
-    <source media="(min-width: 768px)" srcset="/images/hero-be-desktop.png" />
-    <img
-      src="/images/hero-be-mobile.png"
-      alt=""
-      role="presentation"
-      loading="eager" decoding="async" fetchpriority="high"
-      class="w-full h-auto block" />
-  </picture>
+<section class="relative w-full" role="banner" aria-label="Hero">
+  <!-- Fond : une seule image, couvrante, sans étirement ni déformation -->
+  <img
+    src="/images/hero-be-mobile.png"
+    alt=""
+    role="presentation"
+    loading="eager" decoding="async" fetchpriority="high"
+    class="md:hidden w-full h-[78vh] min-h-[460px] object-cover object-center" />
+  <img
+    src="/images/hero-be-desktop.png"
+    alt=""
+    role="presentation"
+    loading="eager" decoding="async" fetchpriority="high"
+    class="hidden md:block w-full h-[85vh] min-h-[560px] object-cover object-center" />
 
-  <!-- Contenu superposé — zone gauche (desktop) / plein largeur (mobile).
-       Léger dégradé sombre pour la lisibilité, transparent au centre. -->
+  <!-- Léger dégradé pour la lisibilité du texte -->
+  <div class="absolute inset-0 bg-gradient-to-r from-black/55 via-black/25 to-transparent"></div>
+
+  <!-- Contenu — zone gauche (desktop) / centrée (mobile), remplit la hauteur -->
   <div class="absolute inset-0 flex items-center">
-    <div class="absolute inset-0 bg-gradient-to-r from-black/45 via-black/20 to-transparent md:from-black/50 md:via-black/25"></div>
-    <div class="relative mx-auto w-full max-w-7xl px-5 md:px-10">
-      <div class="max-w-[520px] text-white">
-        <h1 class="text-[30px] md:text-[46px] lg:text-[52px] font-extrabold leading-[1.1] drop-shadow-sm">
+    <div class="mx-auto w-full max-w-7xl px-5 md:px-10">
+      <div class="max-w-[600px] text-white">
+        <h1 class="text-[34px] md:text-[56px] lg:text-[64px] font-extrabold leading-[1.05] drop-shadow-md">
           {t(lang, "hero.title")}
         </h1>
-        <p class="mt-4 text-[17px] md:text-[21px] leading-snug text-white/90 drop-shadow-sm">
+        <p class="mt-5 md:mt-6 text-[19px] md:text-[24px] lg:text-[26px] font-semibold text-white/95 drop-shadow-md leading-snug">
           {t(lang, "hero.subtitle")}
         </p>
-        <p class="mt-2 md:mt-3 text-[15px] md:text-[17px] text-white/85 drop-shadow-sm">
+        <p class="mt-3 md:mt-4 text-[16px] md:text-[19px] lg:text-[21px] text-white/90 drop-shadow-md">
           {t(lang, "hero.desc")}
         </p>
 
-        <!-- Arguments : ✓ / boîte / camion -->
-        <div class="mt-4 md:mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] md:text-[15px] font-semibold text-white/95">
-          <span class="inline-flex items-center gap-1.5"><svg class="h-4 w-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>{t(lang, "hero.arg1")}</span>
-          <span class="inline-flex items-center gap-1.5"><svg class="h-4 w-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>{t(lang, "hero.arg2")}</span>
-          <span class="inline-flex items-center gap-1.5"><svg class="h-4 w-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 6V4H3v13h3"/><path d="M7 6h8"/><path d="M16 10h5l3 3v3h-2"/><circle cx="8" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg>{t(lang, "hero.arg3")}</span>
+        <!-- Arguments avec icônes -->
+        <div class="mt-6 md:mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-[15px] md:text-[18px] font-semibold text-white/95">
+          <span class="inline-flex items-center gap-2"><svg class="h-5 w-5 text-[#F2C94C]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>{t(lang, "hero.arg1")}</span>
+          <span class="inline-flex items-center gap-2"><svg class="h-5 w-5 text-[#F2C94C]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>{t(lang, "hero.arg2")}</span>
+          <span class="inline-flex items-center gap-2"><svg class="h-5 w-5 text-[#F2C94C]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 6V4H3v13h3"/><path d="M7 6h8"/><path d="M16 10h5l3 3v3h-2"/><circle cx="8" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg>{t(lang, "hero.arg3")}</span>
         </div>
 
-        <!-- CTA → collection -->
-        <a href={collectionLink}
-          class="mt-5 md:mt-7 inline-flex items-center justify-center rounded-lg bg-black px-6 py-3.5 text-sm md:text-base font-semibold text-white hover:bg-neutral-800 transition-colors w-full sm:w-auto">
-          {t(lang, "hero.cta")}
-        </a>
+        <!-- CTA → collection (noir + jaune or) -->
+        <div class="mt-7 md:mt-9">
+          <a href={collectionLink}
+            class="max-w-full inline-flex items-center justify-center gap-2 rounded-lg bg-black px-8 py-4 text-base md:text-lg font-bold text-[#F2C94C] hover:bg-neutral-900 transition-colors w-full sm:w-auto">
+            {t(lang, "hero.cta")}
+          </a>
+        </div>
       </div>
     </div>
   </div>

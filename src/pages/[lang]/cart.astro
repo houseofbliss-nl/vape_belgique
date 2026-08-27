@@ -50,7 +50,7 @@ const orderLink = p(lang, "/order-summary/");
       </p>
       <a
         href={orderLink}
-        class="flex w-full items-center justify-center gap-2 rounded-lg bg-black py-4 text-base font-bold text-white hover:bg-neutral-800"
+        class="flex w-full items-center justify-center gap-2 rounded-lg bg-black py-4 text-base font-bold text-[#F2C94C] hover:bg-neutral-900"
       >
         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
         {t(lang, "cart.submitOrder")}
@@ -96,7 +96,7 @@ const orderLink = p(lang, "/order-summary/");
       linesEl.innerHTML = `
         <div class="rounded-lg border border-neutral-200 bg-white p-10 text-center">
           <p class="mb-3 text-neutral-600">${cartEmpty}</p>
-          <a href="${cartHome}" class="inline-block rounded-lg bg-black px-5 py-2.5 text-sm font-semibold text-white">${cartStart}</a>
+          <a href="${cartHome}" class="inline-block rounded-lg bg-black px-5 py-2.5 text-sm font-semibold text-[#F2C94C]">${cartStart}</a>
         </div>`;
       return;
     }
@@ -132,7 +132,7 @@ const orderLink = p(lang, "/order-summary/");
                 </div>
               </div>
               <button type="button" data-remove="${item.productId}"
-                class="mt-1.5 w-full bg-black text-white text-[13px] md:text-[14px] font-bold rounded-lg py-2.5 px-4 md:py-2.5 hover:opacity-90 transition-opacity">${cartRemove}</button>
+                class="mt-1.5 w-full bg-black text-[#F2C94C] text-[13px] md:text-[14px] font-bold rounded-lg py-2.5 px-4 md:py-2.5 hover:opacity-90 transition-opacity">${cartRemove}</button>
             </div>
           </div>`;
       })

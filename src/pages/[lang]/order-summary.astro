@@ -64,7 +64,7 @@ const all = SLIM_CATALOG;
       appEl.innerHTML = `
         <div class="rounded-lg border border-neutral-200 bg-white p-10 text-center space-y-3">
           <p class="text-neutral-600">${tRuntime("order.emptyTitle")}</p>
-          <a href="${pRuntime("/")}" class="inline-block rounded-lg bg-black px-5 py-2.5 text-sm font-semibold text-white">${tRuntime("cart.startShopping")}</a>
+          <a href="${pRuntime("/")}" class="inline-block rounded-lg bg-black px-5 py-2.5 text-sm font-semibold text-[#F2C94C]">${tRuntime("cart.startShopping")}</a>
         </div>`;
       return;
     }
@@ -213,7 +213,7 @@ const all = SLIM_CATALOG;
           <p class="text-center text-[13px] text-[#E53E3E] mt-2 font-bold">${tRuntime("order.minOrderNotice",{min:fmtEur(MIN),more:fmtEur(under)})}</p>
         </div>` : `
         <a id="checkout" href="${url}" target="_blank" rel="noopener noreferrer"
-          class="flex items-center justify-center gap-2 w-full rounded-lg bg-black text-white py-4 text-[15px] font-bold hover:bg-neutral-800 transition-colors">
+          class="flex items-center justify-center gap-2 w-full rounded-lg bg-black text-[#F2C94C] py-4 text-[15px] font-bold hover:bg-neutral-900 transition-colors">
           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
           ${tRuntime("order.checkout")}
         </a>`}
