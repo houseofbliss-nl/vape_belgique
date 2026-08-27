@@ -1,0 +1,21 @@
+---
+// Redirection racine → langue par défaut (NL, la x-default du hreflang).
+// Toutes les pages vivent sous /nl /fr /de ; la racine n'a pas d'index.
+// On pointe / → /nl/ (meilleur SEO : canonical + x-default déjà NL).
+const CANON = "/nl/";
+---
+<!doctype html>
+<html lang="nl-BE">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <link rel="canonical" href={`/nl/`} />
+    <meta http-equiv="refresh" content={`0; url=${CANON}`} />
+    <title>vape24be — Vapes & e-sigaretten in België</title>
+  </head>
+  <body>
+    <p>Doorverwijzen naar <a href="/nl/">vape24be — België</a>…</p>
+    <script>window.location.replace("/nl/");</script>
+  </body>
+</html>
