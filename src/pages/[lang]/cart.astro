@@ -50,7 +50,7 @@ const orderLink = p(lang, "/order-summary/");
       </p>
       <a
         href={orderLink}
-        class="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-4 text-base font-bold text-white hover:bg-[#C61F2D]"
+        class="flex w-full items-center justify-center gap-2 rounded-lg bg-neutral-900 py-4 text-base font-bold text-white hover:bg-neutral-800"
       >
         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
         {t(lang, "cart.submitOrder")}
@@ -64,10 +64,19 @@ const orderLink = p(lang, "/order-summary/");
      ⚠ set:html obligatoire : Astro n'évalue PAS {…} dans le contenu d'un <script>. -->
 <script type="application/json" id="slim-data" set:html={JSON.stringify(all)}></script>
 
-<script define:vars={{ cartEmpty, cartStart, cartRemove, cartSubtract, cartAdd, cartHome, cartBase }}>
-  import { getItems, setQuantity, remove, onStorageChanged } from "../../lib/store";
+<!-- Chaînes = dans un JSON inline (comme slim-data) pour éviter un <script>
+     classic contenant un import (SyntaxError → render jamais exécuté = "chargement" permanent). -->
+<script type="application/json" id="cart-strings"
+  set:html={JSON.stringify({ cartEmpty, cartStart, cartRemove, cartSubtract, cartAdd, cartHome, cartBase })}>
+</script>
+
+<script type="module">
+  import { getItems, setQuantity, remove, onStorageChanged, type ListItem } from "../../lib/store";
   import { packPrice } from "../../lib/packs";
   import { formatPrice } from "../../lib/format";
+
+  const STR = JSON.parse(document.getElementById("cart-strings")!.textContent || "{}");
+  const { cartEmpty, cartStart, cartRemove, cartSubtract, cartAdd, cartHome, cartBase } = STR;
 
   const linesEl = document.getElementById("lines")!;
   const INDEX = JSON.parse(document.getElementById("slim-data")!.textContent || "[]");

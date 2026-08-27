@@ -44,7 +44,7 @@ const switchTo = (l: Lang) => `${SITE_URL}/${l}${curBase}${curQuery}`;
     <!-- Icônes droite -->
     <div class="flex items-center ml-auto gap-1">
       <!-- Sélecteur de langue -->
-      <div class="hidden sm:flex items-center rounded-full border border-neutral-200 overflow-hidden mr-1" role="group" aria-label="Taal / Langue / Sprache">
+      <div class="flex sm:flex items-center rounded-full border border-neutral-200 overflow-hidden mr-1" role="group" aria-label="Taal / Langue / Sprache">
         {(["nl", "fr", "de"] as Lang[]).map((l) => (
           <a
             href={switchTo(l)}

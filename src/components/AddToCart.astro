@@ -60,7 +60,7 @@ const addedToast = t(lang, "product.addedToast");
     arr.forEach((btn) => {
       const saved = { txt: btn.textContent || "", cls: btn.className };
       btn.textContent = addedLabel;
-      btn.classList.add("!bg-[#ED2939]", "!border-[#ED2939]", "!text-white");
+      btn.classList.add("!bg-neutral-900", "!border-neutral-900", "!text-white");
       clearTimeout(feedbackTimer.get(btn));
       feedbackTimer.set(btn, setTimeout(() => {
         btn.textContent = saved.txt;
