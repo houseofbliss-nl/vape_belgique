@@ -10,8 +10,17 @@ const { lang } = Astro.props;
 const addedLabel = t(lang, "product.added");
 const addedToast = t(lang, "product.addedToast");
 ---
-<script define:vars={{ addedLabel, addedToast }}>
+<!-- Chaînes dans un JSON inline : un <script define:vars> avec import est émis en
+     classic → SyntaxError → le bouton d'ajout ne fonctionne pas. -->
+<script type="application/json" id="addtocart-strings"
+  set:html={JSON.stringify({ addedLabel, addedToast })}>
+</script>
+
+<script type="module">
   import { add, onStorageChanged } from "../lib/store";
+
+  const STR = JSON.parse(document.getElementById("addtocart-strings")!.textContent || "{}");
+  const { addedLabel, addedToast } = STR;
 
   let toastEl = null;
   function showToast(msg: string) {
@@ -60,7 +69,7 @@ const addedToast = t(lang, "product.addedToast");
     arr.forEach((btn) => {
       const saved = { txt: btn.textContent || "", cls: btn.className };
       btn.textContent = addedLabel;
-      btn.classList.add("!bg-neutral-900", "!border-neutral-900", "!text-white");
+      btn.classList.add("!bg-black", "!border-neutral-900", "!text-white");
       clearTimeout(feedbackTimer.get(btn));
       feedbackTimer.set(btn, setTimeout(() => {
         btn.textContent = saved.txt;

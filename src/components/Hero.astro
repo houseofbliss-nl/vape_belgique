@@ -10,21 +10,17 @@ const { lang } = Astro.props;
 const collectionLink = p(lang, "/kategorijos/");
 ---
 <section class="relative w-full overflow-hidden">
-  <!-- Fond : desktop (tablette+) puis mobile, sans étirement ni déformation -->
-  <div class="relative">
-    <img
-      src="/images/hero-be-desktop.png"
-      alt=""
-      role="presentation"
-      loading="eager" decoding="async" fetchpriority="high"
-      class="hidden md:block w-full h-auto object-cover" />
+  <!-- Fond : <picture> rend UNE SEULE image selon le viewport
+       (≥768px → desktop, sinon mobile). Aucune superposition possible. -->
+  <picture>
+    <source media="(min-width: 768px)" srcset="/images/hero-be-desktop.png" />
     <img
       src="/images/hero-be-mobile.png"
       alt=""
       role="presentation"
       loading="eager" decoding="async" fetchpriority="high"
-      class="md:hidden w-full h-auto object-cover" />
-  </div>
+      class="w-full h-auto block" />
+  </picture>
 
   <!-- Contenu superposé — zone gauche (desktop) / plein largeur (mobile).
        Léger dégradé sombre pour la lisibilité, transparent au centre. -->
@@ -51,7 +47,7 @@ const collectionLink = p(lang, "/kategorijos/");
 
         <!-- CTA → collection -->
         <a href={collectionLink}
-          class="mt-5 md:mt-7 inline-flex items-center justify-center rounded-lg bg-neutral-900 px-6 py-3.5 text-sm md:text-base font-semibold text-white hover:bg-neutral-800 transition-colors w-full sm:w-auto">
+          class="mt-5 md:mt-7 inline-flex items-center justify-center rounded-lg bg-black px-6 py-3.5 text-sm md:text-base font-semibold text-white hover:bg-neutral-800 transition-colors w-full sm:w-auto">
           {t(lang, "hero.cta")}
         </a>
       </div>

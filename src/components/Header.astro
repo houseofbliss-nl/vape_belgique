@@ -52,7 +52,7 @@ const switchTo = (l: Lang) => `${SITE_URL}/${l}${curBase}${curQuery}`;
             title={LANG_NAMES[l]}
             class={`px-2.5 md:px-3 py-2 text-[12px] md:text-[13px] font-bold leading-none uppercase tracking-wide transition-colors ${
               i > 0 ? "border-l-2 border-neutral-300" : ""
-            } ${l === lang ? "bg-black text-white" : "bg-white text-neutral-800 hover:bg-neutral-100"}`}
+            } ${l === lang ? "bg-black text-[#F2C94C]" : "bg-white text-neutral-800 hover:bg-neutral-100"}`}
           >{l.toUpperCase()}</a>
         ))}
       </div>

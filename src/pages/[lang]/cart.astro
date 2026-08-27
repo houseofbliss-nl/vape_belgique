@@ -50,7 +50,7 @@ const orderLink = p(lang, "/order-summary/");
       </p>
       <a
         href={orderLink}
-        class="flex w-full items-center justify-center gap-2 rounded-lg bg-neutral-900 py-4 text-base font-bold text-white hover:bg-neutral-800"
+        class="flex w-full items-center justify-center gap-2 rounded-lg bg-black py-4 text-base font-bold text-white hover:bg-neutral-800"
       >
         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
         {t(lang, "cart.submitOrder")}
@@ -96,7 +96,7 @@ const orderLink = p(lang, "/order-summary/");
       linesEl.innerHTML = `
         <div class="rounded-lg border border-neutral-200 bg-white p-10 text-center">
           <p class="mb-3 text-neutral-600">${cartEmpty}</p>
-          <a href="${cartHome}" class="inline-block rounded-lg bg-neutral-900 px-5 py-2.5 text-sm font-semibold text-white">${cartStart}</a>
+          <a href="${cartHome}" class="inline-block rounded-lg bg-black px-5 py-2.5 text-sm font-semibold text-white">${cartStart}</a>
         </div>`;
       return;
     }
