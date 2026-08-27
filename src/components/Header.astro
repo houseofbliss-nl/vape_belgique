@@ -43,13 +43,16 @@ const switchTo = (l: Lang) => `${SITE_URL}/${l}${curBase}${curQuery}`;
 
     <!-- Icônes droite -->
     <div class="flex items-center ml-auto gap-1">
-      <!-- Sélecteur de langue -->
-      <div class="flex sm:flex items-center rounded-full border border-neutral-200 overflow-hidden mr-1" role="group" aria-label="Taal / Langue / Sprache">
-        {(["nl", "fr", "de"] as Lang[]).map((l) => (
+      <!-- Sélecteur de langue — bien visible (pastilles noires / contrastées) -->
+      <div class="flex items-center rounded-lg border-2 border-neutral-800 overflow-hidden mr-1.5 shrink-0" role="group" aria-label="Taal / Langue / Sprache">
+        {(["nl", "fr", "de"] as Lang[]).map((l, i) => (
           <a
             href={switchTo(l)}
             lang={LANG_NAMES[l]}
-            class={`px-2.5 py-1.5 text-[11px] font-bold leading-none ${l === lang ? "bg-black text-white" : "text-neutral-500 hover:bg-neutral-100"}`}
+            title={LANG_NAMES[l]}
+            class={`px-2.5 md:px-3 py-2 text-[12px] md:text-[13px] font-bold leading-none uppercase tracking-wide transition-colors ${
+              i > 0 ? "border-l-2 border-neutral-300" : ""
+            } ${l === lang ? "bg-black text-white" : "bg-white text-neutral-800 hover:bg-neutral-100"}`}
           >{l.toUpperCase()}</a>
         ))}
       </div>
