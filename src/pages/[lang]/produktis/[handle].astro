@@ -1,33 +1,65 @@
 ---
 // Page produit — mobile-first (image pleine dessus, détails dessous).
 // Packs ×2/×3/×5/×10 (packs.ts) + ajout au panier + ajouts liés.
-import Base from "../../layouts/Base.astro";
-import ProductCard from "../../components/ProductCard.astro";
-import AddToCart from "../../components/AddToCart.astro";
-import { products } from "../../data/products.json";
-import { BY_CAT_SUB, categoryByCat } from "../../lib/taxonomy";
-import { classify } from "../../lib/classify";
-import { formatPrice } from "../../lib/format";
-import { packOptions, packPrice } from "../../lib/packs";
-import { SITE_URL, SITE_NAME, ORG_ADDRESS, SHIPPING_COUNTRY } from "../../lib/site";
-import type { Product } from "../../lib/types";
+import Base from "../../../layouts/Base.astro";
+import ProductCard from "../../../components/ProductCard.astro";
+import AddToCart from "../../../components/AddToCart.astro";
+import { getProducts, productByHandle } from "../../../lib/catalog";
+import { BY_CAT_SUB, categoryByCat } from "../../../lib/taxonomy";
+import { classify } from "../../../lib/classify";
+import { formatPrice } from "../../../lib/format";
+import { packOptions, CRYPTO_DISCOUNT_PERCENT } from "../../../lib/packs";
+import { SITE_URL, SITE_NAME, ORG_ADDRESS, SHIPPING_COUNTRY } from "../../../lib/site";
+import type { Product } from "../../../lib/types";
+import { t, p, LANGS, LANG_LOCALES } from "../../../lib/i18n";
+import type { Lang } from "../../../lib/i18n";
 
 export function getStaticPaths() {
-  return products.map((p) => ({
-    params: { handle: p.handle },
-    props: { product: p },
-  }));
+  const paths = [];
+  for (const lang of LANGS) {
+    for (const p of getProducts(lang)) {
+      paths.push({ params: { lang, handle: p.handle }, props: { lang, product: p } });
+    }
+  }
+  return paths;
 }
 
 interface Props {
+  lang: Lang;
   product: Product;
 }
 
-const { product } = Astro.props;
-// Packs : on retire le « ×1 » (unité simple) — la sélection commence à ×2
+const { lang, product } = Astro.props;
+// Catalogue de la langue courante (description NL/FR/DE), handle → produit (O(1)).
+const products = getProducts(lang);
+const byHandle = productByHandle(lang);
+// Packs : on retire le « Set ×1 » (unité simple) — la sélection commence à ×2
 // (décision utilisateur 22/08) → il reste 4 boutons : ×2 ×3 ×5 ×10.
 const options = packOptions(product.price_eur).filter((o) => o.qty !== 1);
-const byHandle = new Map(products.map((p) => [p.handle, p]));
+
+// Templates Telegram localisés (tg.*) — injectés par langue à l'édition.
+// Le <script> produit est "classic" (non bundlé) → pas d'import : on passe ces
+// chaînes via define:vars, avec {date}/{q}/{p} substitués à l'exécution.
+const TGS = {
+  name: "vape24be",
+  locale: LANG_LOCALES[lang],
+  greeting: t(lang, "tg.greeting", { name: "vape24be" }),
+  newOrder: t(lang, "tg.newOrder", { name: "vape24be" }),
+  orderHeading: t(lang, "tg.orderHeading"),
+  total: t(lang, "tg.total"),
+  shipping: t(lang, "tg.shippingAddress"),
+  notProvided: t(lang, "tg.notProvided"),
+  deliveryTitle: t(lang, "tg.deliveryTitle"),
+  courierDesc: t(lang, "tg.courierDesc"),
+  postDesc: t(lang, "tg.postDesc"),
+  paymentHeading: t(lang, "tg.paymentHeading"),
+  bank: t(lang, "tg.paymentBank"),
+  crypto: t(lang, "tg.paymentCrypto"),
+  savePercent: t(lang, "tg.savePercent"),
+  payBefore: t(lang, "tg.payBefore"),
+  footer: t(lang, "tg.footer"),
+  packOf: t(lang, "tg.packOf"),
+};
 
 // Classement du produit (classifieur) → catégorie + sous-catégorie pour breadcrumb + related.
 const cls = classify({ title: product.title, description: product.description, tags: product.tags });
@@ -55,8 +87,8 @@ const schema = {
     price: product.price_eur,
     priceCurrency: "EUR",
     availability: "https://schema.org/InStock",
-    url: `${SITE_URL}/produktis/${product.handle}`,
-    // Livraison réelle : gratuite/incluse, dans toute la Lituanie (LT).
+    url: `${SITE_URL}${p(lang, `/produktis/${product.handle}`)}`,
+    // Livraison réelle : gratuite/incluse, dans toute la Belgique (BE).
     // Article page produit + cart + miestai : "kurjeriu 30 min–2 val." et "Lietuvos paštu 1–3 d. d."
     shippingDetails: {
       "@type": "OfferShippingDetails",
@@ -81,26 +113,30 @@ const schema = {
   },
 };
 
-// Meta description CTR : titre — vendor — prix — extrait LT (1re phrase si courte, sinon début + …).
-const priceTag = formatPrice(product.price_eur);
+// Meta description CTR : titre — vendor — prix — extrait (1ère phrase si courte, sinon début + …).
+const priceTag = formatPrice(product.price_eur, lang);
 const cleanDesc = (product.description || "").replace(/\s+/g, " ").trim();
 const sentence = cleanDesc.match(/^(.{0,120}?)(?:\.|\?|!)( |$)/)?.[1]?.trim();
 const firstPhrase = sentence && sentence.length >= 30 ? sentence : cleanDesc.slice(0, 120).trimEnd();
-const metaDescription = `${product.title} — ${product.vendor}. ${priceTag}. ${firstPhrase}${firstPhrase ? "…" : ""} Užsakymas per Telegram.`.slice(0, 170);
+const metaDescription = `${product.title} — ${product.vendor}. ${priceTag}. ${firstPhrase}${firstPhrase ? "…" : ""} ${t(lang, "footer.orderViaTelegram")}.`.slice(0, 170);
 
+const homeLabel = t(lang, "nav.home");
+const catLabel = catNode ? t(lang, `cat.${catNode.id}`) : "";
+const subLabel = bucket ? t(lang, `sub.${bucket.key}`) : "";
 // Fil d'ariane → BreadcrumbList schema (même hiérarchie que le fil visible).
-const crumbs = [{ name: "Pradžia", url: "/" }];
+const crumbs = [{ name: homeLabel, url: p(lang, "/") }];
 if (catNode) {
-  crumbs.push({ name: catNode.label, url: `/kategorijos/${catNode.id}` });
-  if (bucket) crumbs.push({ name: bucket.label, url: `/kategorijos/${bucket.cat}/${bucket.key}` });
+  crumbs.push({ name: t(lang, `cat.${catNode.id}`), url: p(lang, `/kategorijos/${catNode.id}`) });
+  if (bucket) crumbs.push({ name: t(lang, `sub.${bucket.key}`), url: p(lang, `/kategorijos/${bucket.cat}/${bucket.key}`) });
 }
 crumbs.push({ name: product.title });
 ---
 
 <Base
+  lang={lang}
   title={`${product.title} — ${SITE_NAME}`}
   description={metaDescription}
-  canonicalPath={`/produktis/${product.handle}`}
+  canonicalPath={p(lang, `/produktis/${product.handle}`)}
   schema={schema}
   ogImage={product.image}
   ogType="product"
@@ -109,15 +145,15 @@ crumbs.push({ name: product.title });
   <div class="mx-auto max-w-6xl px-3 py-4 md:py-8">
     <!-- Fil d'ariane -->
     <nav class="mb-4 flex items-center gap-1.5 text-xs text-neutral-500">
-      <a href="/" class="hover:text-neutral-900">Pradžia</a>
+      <a href={p(lang, "/")} class="hover:text-neutral-900">{homeLabel}</a>
       <span>/</span>
       {catNode && (
         <>
-          <a href={`/kategorijos/${catNode.id}`} class="hover:text-neutral-900">{catNode.label}</a>
+          <a href={p(lang, `/kategorijos/${catNode.id}`)} class="hover:text-neutral-900">{catLabel}</a>
           <span>/</span>
           {bucket && (
             <>
-              <a href={`/kategorijos/${bucket.cat}/${bucket.key}`} class="hover:text-neutral-900">{bucket.label}</a>
+              <a href={p(lang, `/kategorijos/${bucket.cat}/${bucket.key}`)} class="hover:text-neutral-900">{subLabel}</a>
               <span>/</span>
             </>
           )}
@@ -139,8 +175,8 @@ crumbs.push({ name: product.title });
         <p class="mb-1 text-sm font-semibold text-primary md:text-base lg:text-sm">{product.vendor}</p>
         <h1 class="text-2xl font-black leading-tight text-neutral-900 md:text-5xl lg:text-4xl">{product.title}</h1>
 
-        <p class="mt-3 text-3xl font-black text-neutral-900 md:text-5xl lg:text-4xl" translate="no">{formatPrice(product.price_eur)}</p>
-        <p class="text-sm text-neutral-500 md:text-base lg:text-sm">Pristatome visoje Lietuvoje</p>
+        <p class="mt-3 text-3xl font-black text-neutral-900 md:text-5xl lg:text-4xl" translate="no">{formatPrice(product.price_eur, lang)}</p>
+        <p class="text-sm text-neutral-500 md:text-base lg:text-sm">{t(lang, "product.deliveryNote")}</p>
 
         <!-- Packs — DEUX rendus (décision 22/08) :
              • MOBILE + TABLETTE (< lg) = tableau vapespot à puces rondes (lignes pleine largeur)
@@ -149,8 +185,8 @@ crumbs.push({ name: product.title });
           <!-- ══ Version MOBILE / TABLETTE : tableau à puces (vapespot) ══ -->
           <div class="lg:hidden border border-[#E8E8E8] bg-white">
             <div class="flex items-center justify-between px-4 py-2.5 border-b border-[#E8E8E8]">
-              <p class="text-[13px] font-extrabold uppercase tracking-wide text-black md:text-[16px]">Pirkti pakuotėje</p>
-              <span class="text-[11px] text-[#9E9E9E] md:text-[13px]">Pasirinkite pakuotę</span>
+              <p class="text-[13px] font-extrabold uppercase tracking-wide text-black md:text-[16px]">{t(lang, "product.buyInPack")}</p>
+              <span class="text-[11px] text-[#9E9E9E] md:text-[13px]">{t(lang, "product.choosePack")}</span>
             </div>
             <div class="divide-y divide-[#F0F0F0]">
               {options.map((o) => {
@@ -170,18 +206,18 @@ crumbs.push({ name: product.title });
                       </span>
                       <span class="text-[14px] font-bold text-black md:text-[18px]" translate="no">×{o.qty}</span>
                       {o.bestValue && (
-                        <span class="text-[10px] font-extrabold uppercase tracking-wide text-[#5B3DF5] md:text-[12px]">
-                          Geriausia vertė
+                        <span class="text-[10px] font-extrabold uppercase tracking-wide text-primary md:text-[12px]">
+                          {t(lang, "product.bestValue")}
                         </span>
                       )}
                     </span>
                     <span class="text-right shrink-0">
                       <span translate="no" class="block text-[14px] font-bold text-black md:text-[18px]">
-                        {o.price != null ? formatPrice(o.price) : "—"}
+                        {o.price != null ? formatPrice(o.price, lang) : "—"}
                       </span>
                       {perUnit != null && (
-                        <span translate="no" class="block text-[11px] font-semibold text-[#7C3AED] md:text-[14px]">
-                          {perUnit.toFixed(2).replace(".", ",")} €/vnt
+                        <span translate="no" class="block text-[11px] font-semibold text-[#ED2939] md:text-[14px]">
+                          {perUnit.toFixed(2).replace(".", ",")} {t(lang, "product.perUnit")}
                         </span>
                       )}
                     </span>
@@ -193,7 +229,7 @@ crumbs.push({ name: product.title });
 
           <!-- ══ Version DESKTOP : pile noire conservée ══ -->
           <div class="hidden lg:block">
-            <p class="mb-2 text-sm font-semibold text-neutral-900">Pirkti pakuotėje</p>
+            <p class="mb-2 text-sm font-semibold text-neutral-900">{t(lang, "product.buyInPack")}</p>
             <div class="flex flex-wrap gap-2">
               {options.map((o) => {
                 const perUnit = o.price != null && o.qty > 1 ? o.price / o.qty : null;
@@ -209,16 +245,16 @@ crumbs.push({ name: product.title });
                       ×{o.qty}
                     </span>
                     <span class="pack-price mt-1 block text-[15px] font-bold" translate="no">
-                      {o.price != null ? formatPrice(o.price) : "—"}
+                      {o.price != null ? formatPrice(o.price, lang) : "—"}
                     </span>
                     {perUnit != null && (
                       <span class="pack-per mt-0.5 block text-[11px]" translate="no">
-                        {perUnit.toFixed(2).replace(".", ",")} €/vnt
+                        {perUnit.toFixed(2).replace(".", ",")} {t(lang, "product.perUnit")}
                       </span>
                     )}
                     {o.bestValue && (
                       <span class="absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">
-                        Geriausia vertė
+                        {t(lang, "product.bestValue")}
                       </span>
                     )}
                   </button>
@@ -235,15 +271,15 @@ crumbs.push({ name: product.title });
             <span id="qty" class="min-w-8 text-center text-base font-bold">1</span>
             <button type="button" data-qty-plus class="px-3 py-2 text-lg font-bold text-neutral-600">＋</button>
           </div>
-          <p class="ml-auto text-xl font-bold"><span id="total" translate="no">{formatPrice(product.price_eur)}</span></p>
+          <p class="ml-auto text-xl font-bold"><span id="total" translate="no">{formatPrice(product.price_eur, lang)}</span></p>
         </div>
 
         <button
           type="button"
           id="addBtn"
-          class="mt-4 w-full rounded-lg bg-primary py-3.5 text-base font-bold text-white hover:bg-red-700"
+          class="mt-4 w-full rounded-lg bg-primary py-3.5 text-base font-bold text-white hover:bg-[#C61F2D]"
         >
-          Į sąrašą
+          {t(lang, "product.addToList")}
         </button>
         <a
           href="#"
@@ -253,7 +289,7 @@ crumbs.push({ name: product.title });
           class="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-primary py-3 text-base font-bold text-primary hover:bg-red-50"
         >
           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
-          Užsakyti per Telegram
+          {t(lang, "product.orderTelegram")}
         </a>
       </div>
     </div>
@@ -262,27 +298,33 @@ crumbs.push({ name: product.title });
          retire le vide sous la photo et la colonne « orpheline » à droite).
          Sur mobile/tablette elle reste sous la fiche, dans le flux normal. -->
     <div class="mt-8 border-t border-neutral-100 pt-5">
-      <h2 class="mb-2 text-lg font-bold text-neutral-900 md:text-2xl">Aprašymas</h2>
+      <h2 class="mb-2 text-lg font-bold text-neutral-900 md:text-2xl">{t(lang, "product.description")}</h2>
       <p class="text-sm leading-relaxed text-neutral-600 md:text-base">{product.description.slice(0, 500)}…</p>
     </div>
 
     <!-- Produits liés -->
     {related.length > 0 && (
       <section class="mt-12">
-        <h2 class="mb-4 text-2xl font-black text-neutral-900">Jums taip pat gali patikti</h2>
+        <h2 class="mb-4 text-2xl font-black text-neutral-900">{t(lang, "product.related")}</h2>
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 md:gap-4">
-          {related.map((p) => <ProductCard product={p} />)}
+          {related.map((p) => <ProductCard product={p} lang={lang} />)}
         </div>
       </section>
     )}
   </div>
 
-  <AddToCart />
+  <AddToCart lang={lang} />
 </Base>
 
-<script define:vars={{ prod: { id: product.id, title: product.title, price: product.price_eur } }}>
+<script define:vars={{
+  prod: { id: product.id, title: product.title, price: product.price_eur },
+  priceRequest: t(lang, "product.priceRequest"),
+  addedLabel: t(lang, "product.added"),
+  TG: TGS,
+  CRYPTO_DISCOUNT_PERCENT,
+}}>
   // ⚠️ Script AUTO-CONFONDU (self-contained) : Astro émet ce <script define:vars>
-  // en "classic script" non bundlé → les `import { ... } from "../../lib"` seraient
+  // en "classic script" non bundlé → les `import { ... } from "../../../lib"` seraient
   // une erreur de syntaxe en navigateur et tueraient tout le module (＋, packs, add,
   // Telegram). On inline donc toute la logique nécessaire ici (mêmes multiplicateurs
   // packs que vapespot).
@@ -351,41 +393,40 @@ crumbs.push({ name: product.title });
     return composed;
   }
 
-  // Message Telegram de commande (porté de telegram.ts) + URL.
+  // Message Telegram de commande — templates tg.* injectés par langue (TG).
   const TELEGRAM_HANDLE = "Vapelt_shop";
   function fmt(p) {
-    if (p == null) return "Kaina pagal užklausą";
+    if (p == null) return priceRequest;
     return `${p.toFixed(2).replace(".", ",")} €`;
   }
+  const fmtDate = () => new Date().toLocaleDateString(TG.locale, { day: "2-digit", month: "long", year: "numeric" });
   function buildTelegramMessage(lines, deliveryAddress, deliveryMethod) {
-    if (!lines.length) return "Sveiki! Norėčiau užsisakyti VAPELT parduotuvėje.";
-    const date = new Date().toLocaleDateString("lt-LT", { day: "2-digit", month: "long", year: "numeric" });
+    if (!lines.length) return TG.greeting.replaceAll("{name}", TG.name);
     const divider = "─────────────────────────";
-    const header = "🛒  NAUJAS UŽSAKYMAS — VAPELT\n📅  " + date;
+    const header = TG.newOrder.replaceAll("{name}", TG.name).replaceAll("{date}", fmtDate());
     const productParts = lines.map((l, i) => {
       const totalNum = packPrice(l.product.price, l.quantity) ?? 0;
       const total = l.product.price == null ? "—" : fmt(totalNum);
       const effUnit = l.quantity > 0 && l.product.price != null ? totalNum / l.quantity : l.product.price;
-      const unit = l.product.price == null ? "Kaina pagal užklausą" : fmt(effUnit);
+      const unit = l.product.price == null ? priceRequest : fmt(effUnit);
       const isPack = isPackQty(l.quantity);
-      return `${i + 1}. ${l.product.title}\n     ${unit} × ${l.quantity} = ${total}${isPack ? "  (paketas iš " + l.quantity + ")" : ""}`;
+      return `${i + 1}. ${l.product.title}\n     ${unit} × ${l.quantity} = ${total}${isPack ? TG.packOf.replaceAll("{q}", String(l.quantity)) : ""}`;
     }).join("\n\n");
     const sum = lines.reduce((s, l) => s + (packPrice(l.product.price, l.quantity) ?? 0), 0);
-    const totalLine = "IŠ VISO:  " + fmt(sum);
+    const totalLine = TG.total + "  " + fmt(sum);
     const addressSection = (deliveryAddress || "").trim()
-      ? "🚚  PRISTATYMO ADRESAS\n\n    " + (deliveryAddress || "").trim()
-      : "🚚  PRISTATYMO ADRESAS\n\n    Nenurodytas";
+      ? TG.shipping + "\n\n    " + (deliveryAddress || "").trim()
+      : TG.shipping + "\n\n    " + TG.notProvided;
     const deliveryMethodSection = deliveryMethod === "courier"
-      ? ["🛵  PRISTATYMO BŪDAS", "    Kurjeriu — paprastai 30 min–2 val. iki durų.", "    (Arba paštu, jei pageidaujama.)"].join("\n")
-      : ["📮  PRISTATYMO BŪDAS", "    Lietuvos paštu — 1–3 darbo dienos."].join("\n");
+      ? [TG.deliveryTitle, TG.courierDesc].join("\n")
+      : [TG.deliveryTitle, TG.postDesc].join("\n");
     const payment = [
-      "💳  APMOKĖJIMAS",
-      "    Bankiniu pavedimu :  " + fmt(sum),
-      "    Kriptovaliuta :      " + fmt(sum * 0.9) + "  (sutaupote 10%)",
-      "    Apmokėjimas reikalingas prieš pristatymą.",
+      TG.paymentHeading,
+      "    " + TG.bank + "  " + fmt(sum),
+      "    " + TG.crypto + "      " + fmt(sum * (1 - CRYPTO_DISCOUNT_PERCENT / 100)) + "  " + TG.savePercent.replaceAll("{p}", String(CRYPTO_DISCOUNT_PERCENT)),
+      "    " + TG.payBefore,
     ].join("\n");
-    const footer = "Prašome atsakyti, kad patvirtintumėte užsakymą. Ačiū! 🙏";
-    return [header, divider, "📦  UŽSAKYMAS\n", productParts, divider, totalLine, divider, addressSection, divider, deliveryMethodSection, divider, payment, divider, footer].join("\n");
+    return [header, divider, TG.orderHeading, productParts, divider, totalLine, divider, addressSection, divider, deliveryMethodSection, divider, payment, divider, TG.footer].join("\n");
   }
   function buildTelegramUrl(message) {
     return `https://t.me/${TELEGRAM_HANDLE}?text=${encodeURIComponent(message)}`;
@@ -441,7 +482,7 @@ crumbs.push({ name: product.title });
   addBtn?.addEventListener("click", () => {
     addToStore(prod.id, qty);
     const original = addBtn.textContent;
-    addBtn.textContent = "✓ Įdėta";
+    addBtn.textContent = addedLabel;
     setTimeout(() => (addBtn.textContent = original), 1200);
   });
 

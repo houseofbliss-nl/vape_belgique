@@ -1,7 +1,7 @@
 // Catalogue léger pour les pages client-side (my-list / order-summary).
 // Le JSON complet (2,3 Mo) contient description/tags inutiles au panier ;
 // on n'embarque ici que les champs nécessaires au lookup client (~580 Ko).
-import productsData from "../data/products.json";
+import productsData from "../data/products-en.json";
 import type { Product } from "./types";
 import { deriveSpec } from "./spec";
 

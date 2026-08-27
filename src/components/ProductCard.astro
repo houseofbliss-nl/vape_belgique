@@ -6,17 +6,20 @@
 import type { Product } from "../lib/types";
 import { formatPrice } from "../lib/format";
 import { deriveSpec } from "../lib/spec";
+import { t, p } from "../lib/i18n";
+import type { Lang } from "../lib/i18n";
 
-interface Props { product: Product; attributes?: Record<string, string | number>; }
-const { product, attributes = {} } = Astro.props;
+interface Props { product: Product; lang: Lang; attributes?: Record<string, string | number>; }
+const { product, lang, attributes = {} } = Astro.props;
 
 const unitPrice = product.price_eur ?? 0;
 const specs = deriveSpec(product.description);
 const dataAttrs = { ...attributes, "data-brand": product.vendor || "" };
+const productLink = p(lang, `/produktis/${product.handle}/`);
 ---
 <div class="h-full w-full flex items-stretch border border-gray-200 bg-[#F5F5F5]" {...dataAttrs}>
   <!-- Image — gauche (PLUS GRANDE : largeur ~42%, keep square) -->
-  <a href={`/produktis/${product.handle}/`} class="w-[42%] min-w-[42%] flex items-center justify-center p-3 bg-white">
+  <a href={productLink} class="w-[42%] min-w-[42%] flex items-center justify-center p-3 bg-white">
     <img src={product.image} alt={product.title} loading="lazy"
       class="w-full aspect-square object-contain mix-blend-multiply" width="400" height="400" />
   </a>
@@ -24,22 +27,22 @@ const dataAttrs = { ...attributes, "data-brand": product.vendor || "" };
   <!-- Texte + bouton — droite (AÉRÉ : polices lisibles, espaces respirants) -->
   <div class="flex-1 min-w-0 flex flex-col py-4 pr-4 pl-2">
     <div class="flex-1 flex items-center">
-      <a href={`/produktis/${product.handle}/`} class="flex flex-col gap-2">
+      <a href={productLink} class="flex flex-col gap-2">
         {product.vendor && (
-          <span class="text-[11px] font-bold uppercase tracking-[0.16em] text-[#7C3AED] leading-none line-clamp-1">{product.vendor}</span>
+          <span class="text-[11px] font-bold uppercase tracking-[0.16em] text-[#ED2939] leading-none line-clamp-1">{product.vendor}</span>
         )}
         <span class="text-[14px] font-bold leading-tight text-black line-clamp-2">{product.title}</span>
-        <span class="text-xs text-[#9E9E9E] leading-snug">{specs || "Vape produktas"}</span>
+        <span class="text-xs text-[#9E9E9E] leading-snug">{specs || t(lang, "product.vapeProduct")}</span>
         <span translate="no" class="mt-1 text-[17px] font-bold text-black leading-none">
           {formatPrice(unitPrice)}
         </span>
-        <span class="mt-0.5 text-[11px] font-semibold text-[#7C3AED] leading-none">🚚 Pristatymas 30 min–2 val.</span>
+        <span class="mt-0.5 text-[11px] font-semibold text-[#ED2939] leading-none">🚚 {t(lang, "product.delivery")}</span>
       </a>
     </div>
 
     <button type="button" data-add-to-list={product.id}
       class="mt-3 w-full bg-black text-white text-xs font-semibold rounded-none py-2.5 hover:opacity-90 transition-opacity">
-      Pridėti į sąrašą
+      {t(lang, "product.addToList")}
     </button>
   </div>
 </div>

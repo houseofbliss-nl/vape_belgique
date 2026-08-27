@@ -3,8 +3,14 @@
 // • [data-add-to-list]  → ajoute 1 unité
 // • [data-add-pack] + [data-pack-qty]  → ajoute DIRECTEMENT le pack (×2/×3/×5/×10)
 // À inclure une seule fois par page (pré-rendu, progressive-enhance).
+import { t } from "../lib/i18n";
+import type { Lang } from "../lib/i18n";
+interface Props { lang: Lang; }
+const { lang } = Astro.props;
+const addedLabel = t(lang, "product.added");
+const addedToast = t(lang, "product.addedToast");
 ---
-<script>
+<script define:vars={{ addedLabel, addedToast }}>
   import { add, onStorageChanged } from "../lib/store";
 
   let toastEl = null;
@@ -53,15 +59,15 @@
     const arr = Array.isArray(btns) ? btns : [btns];
     arr.forEach((btn) => {
       const saved = { txt: btn.textContent || "", cls: btn.className };
-      btn.textContent = "✓ Įdėta";
-      btn.classList.add("!bg-[#7C3AED]", "!border-[#7C3AED]", "!text-white");
+      btn.textContent = addedLabel;
+      btn.classList.add("!bg-[#ED2939]", "!border-[#ED2939]", "!text-white");
       clearTimeout(feedbackTimer.get(btn));
       feedbackTimer.set(btn, setTimeout(() => {
         btn.textContent = saved.txt;
         btn.className = saved.cls;
       }, 1200) as any);
     });
-    showToast(arr.length ? "Pridėta į sąrašą ✓" : "");
+    showToast(arr.length ? addedToast : "");
   }
 
   document.addEventListener("astro:page-load", bind);

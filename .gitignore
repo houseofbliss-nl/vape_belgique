@@ -29,3 +29,7 @@ pnpm-debug.log*
 /check-slim.mjs
 translation-progress.json
 /scripts/*.log
+
+# translation artifacts (regenerable)
+scripts/translation-progress-be.json
+scripts/translate-be.log

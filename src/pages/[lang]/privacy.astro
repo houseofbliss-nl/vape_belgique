@@ -1,0 +1,21 @@
+---
+import Base from "../../layouts/Base.astro";
+import { SITE_NAME } from "../../lib/site";
+import { t, p, langStaticPaths } from "../../lib/i18n";
+import type { Lang } from "../../lib/i18n";
+
+export function getStaticPaths() { return langStaticPaths(); }
+interface Props { lang: Lang; }
+const { lang } = Astro.props;
+---
+<Base lang={lang} title={`${t(lang, "page.privacyTitle")} — ${SITE_NAME}`} canonicalPath={p(lang, "/privacy")}>
+  <div class="mx-auto max-w-3xl px-4 py-10">
+    <h1 class="text-3xl font-black text-neutral-900 md:text-5xl">{t(lang, "page.privacyTitle")}</h1>
+    <p class="mt-4 text-sm leading-relaxed text-neutral-600">
+      {t(lang, "page.privacyP1", { name: SITE_NAME })}
+    </p>
+    <p class="mt-3 text-sm leading-relaxed text-neutral-600">
+      {t(lang, "page.privacyP2")}
+    </p>
+  </div>
+</Base>

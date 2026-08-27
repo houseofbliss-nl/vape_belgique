@@ -1,0 +1,147 @@
+---
+// Page ville — SEO local : livraison dans la ville, FAQ, autres villes, geo.
+// Enrichie (page villes modèle steroidskaufen) :
+//   • grille « Populiariausi produktai » (même style que l'accueil)
+//   • contenu local unique par ville (region, population, livraison)
+//   • AddToCart pour que les boutons des cartes fonctionnent.
+import Base from "../../../layouts/Base.astro";
+import cities from "../../../data/cities.json";
+import ProductCard from "../../../components/ProductCard.astro";
+import AddToCart from "../../../components/AddToCart.astro";
+import { SITE_NAME, SITE_URL } from "../../../lib/site";
+import { t, p, LANGS, cityName } from "../../../lib/i18n";
+import type { Lang } from "../../../lib/i18n";
+import type { City } from "../../../lib/types";
+import { getProducts } from "../../../lib/catalog";
+
+export function getStaticPaths() {
+  const paths = [];
+  for (const lang of LANGS) {
+    for (const c of cities) {
+      paths.push({ params: { slug: c.slug, lang }, props: { city: c, lang } });
+    }
+  }
+  return paths;
+}
+
+interface Props { city: City; lang: Lang; }
+
+const { city, lang } = Astro.props;
+const cn = cityName(lang, city); // nom de la ville localisé (Brussel/Bruxelles/Brüssel…)
+const others = cities.filter((c) => c.slug !== city.slug);
+// Produits en vitrine — mêmes que l'accueil (cohérence de marque).
+const showProducts = getProducts(lang).slice(0, 12);
+const LOC = ({ nl: "nl-BE", fr: "fr-BE", de: "de-DE" } as const)[lang];
+const popStr = city.population.toLocaleString(LOC);
+const urlCity = p(lang, `/miestai/${city.slug}`);
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  name: t(lang, "city.schemaName", { name: SITE_NAME, region: city.region }),
+  url: `${SITE_URL}${urlCity}`,
+  description: t(lang, "city.schemaDesc", { city: cn }),
+  areaServed: { "@type": "City", name: cn },
+  geo: { "@type": "GeoCoordinates", latitude: city.lat, longitude: city.lng },
+};
+
+// FAQPage JSON-LD — même contenu que la FAQ visible (rich results « FAQ » de Google).
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: t(lang, "city.faqDeliverQ", { city: cn }),
+      acceptedAnswer: { "@type": "Answer", text: t(lang, "city.faqDeliverA", { city: cn }) },
+    },
+    {
+      "@type": "Question",
+      name: t(lang, "city.faqHowQ"),
+      acceptedAnswer: { "@type": "Answer", text: t(lang, "city.faqHowA") },
+    },
+    {
+      "@type": "Question",
+      name: t(lang, "city.faqPayQ"),
+      acceptedAnswer: { "@type": "Answer", text: t(lang, "city.faqPayA") },
+    },
+  ],
+};
+---
+
+<Base
+  lang={lang}
+  title={`${t(lang, "city.pageTitle", { city: cn })} — ${SITE_NAME}`}
+  description={t(lang, "city.schemaDesc", { city: cn })}
+  canonicalPath={urlCity}
+  schema={schema}
+  jsonLd={faqSchema}
+>
+  <div class="mx-auto max-w-6xl px-4 py-8">
+    <h1 class="text-3xl font-black leading-tight text-neutral-900 md:text-5xl">
+      {t(lang, "city.pageTitle", { city: cn })}
+    </h1>
+    <p class="mt-3 max-w-2xl text-neutral-600">
+      {t(lang, "city.lead", { name: SITE_NAME, city: cn, region: city.region })}
+    </p>
+
+    <!-- Chiffre local (population) — unique par ville -->
+    <p class="mt-3 text-sm text-neutral-500">
+      {t(lang, "city.population", { city: cn, pop: popStr })}
+    </p>
+
+    <a
+      href="https://t.me/Vapelt_shop"
+      target="_blank"
+      rel="noopener"
+      class="mt-5 inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white hover:bg-[#C61F2D]"
+    >
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
+      {t(lang, "city.orderDelivery", { city: cn })}
+    </a>
+
+    <!-- Produits vedettes (grille, même style que l'accueil) -->
+    <section class="mt-10">
+      <h2 class="mb-4 text-2xl font-black text-neutral-900">{t(lang, "city.popularProducts")}</h2>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 md:gap-4">
+        {showProducts.map((pr) => <ProductCard product={pr} lang={lang} />)}
+      </div>
+    </section>
+
+    <!-- FAQ locale -->
+    <section class="mt-10">
+      <h2 class="mb-4 text-2xl font-black text-neutral-900">{t(lang, "city.faq")}</h2>
+      <div class="space-y-4">
+        <div class="rounded-lg border border-neutral-200 p-4">
+          <p class="font-semibold text-neutral-900">{t(lang, "city.faqDeliverQ", { city: cn })}</p>
+          <p class="mt-1 text-sm text-neutral-600">{t(lang, "city.faqDeliverA", { city: cn })}</p>
+        </div>
+        <div class="rounded-lg border border-neutral-200 p-4">
+          <p class="font-semibold text-neutral-900">{t(lang, "city.faqHowQ")}</p>
+          <p class="mt-1 text-sm text-neutral-600">{t(lang, "city.faqHowA")}</p>
+        </div>
+        <div class="faq-item rounded-lg border border-neutral-200 p-4">
+          <p class="font-semibold text-neutral-900">{t(lang, "city.faqPayQ")}</p>
+          <p class="mt-1 text-sm text-neutral-600">{t(lang, "city.faqPayA")}</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Autres villes -->
+    <section class="mt-10">
+      <h2 class="mb-4 text-2xl font-black text-neutral-900">{t(lang, "city.deliverCities")}</h2>
+      <div class="flex flex-wrap gap-2">
+        {others.map((c) => (
+          <a
+            href={p(lang, `/miestai/${c.slug}`)}
+            class="rounded-full border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:border-primary hover:text-primary"
+          >
+            {c.name}
+          </a>
+        ))}
+      </div>
+    </section>
+  </div>
+
+  <AddToCart lang={lang} />
+</Base>

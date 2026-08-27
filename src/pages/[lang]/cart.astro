@@ -1,44 +1,61 @@
 ---
-// Panier (My List) — mobile-first, style vapespot adapté aux couleurs/design de CE site (LT).
+// Panier (My List) — mobile-first, style vapespot adapté aux couleurs/design de CE site (NL/FR/DE).
 // Cartes image gauche + titre/spec/prix pack + sélecteur quantité + « Pašalinti ».
 // CTA « Pateikti užsakymą » → /order-summary/ (récap avant envoi Telegram, comme vapespot).
-import Base from "../layouts/Base.astro";
-import { SLIM_CATALOG } from "../lib/slim-catalog";
-import { SITE_NAME } from "../lib/site";
+import Base from "../../layouts/Base.astro";
+import { SLIM_CATALOG } from "../../lib/slim-catalog";
+import { SITE_NAME } from "../../lib/site";
+import { t, p, langStaticPaths } from "../../lib/i18n";
+import type { Lang } from "../../lib/i18n";
+
+export function getStaticPaths() { return langStaticPaths(); }
+interface Props { lang: Lang; }
+const { lang } = Astro.props;
 
 const all = SLIM_CATALOG;
+const cartTitle = t(lang, "cart.title");
+const cartEmpty = t(lang, "cart.emptyTitle");
+const cartLoading = t(lang, "cart.loading");
+const cartStart = t(lang, "cart.startShopping");
+const cartRemove = t(lang, "cart.remove");
+const cartSubtract = t(lang, "product.qtyMinusAria");
+const cartAdd = t(lang, "product.qtyPlusAria");
+const cartHome = p(lang, "/"); // /{lang}/
+const cartBase = `/${lang}`;   // /{lang}
+const orderLink = p(lang, "/order-summary/");
 ---
 <Base
-  title={`Mano sąrašas — ${SITE_NAME}`}
-  description="Jūsų pasirinkti produktai. Peržiūrėkite užsakymą ir pateikite jį per Telegram."
-  canonicalPath="/cart"
+  lang={lang}
+  title={`${cartTitle} — ${SITE_NAME}`}
+  description={t(lang, "footer.blurb")}
+  canonicalPath={p(lang, "/cart")}
   noindex
 >
   <div class="mx-auto max-w-4xl px-3 py-6 md:py-8">
-    <h1 class="mb-6 text-3xl font-black text-neutral-900 md:text-4xl">Mano sąrašas</h1>
+    <h1 class="mb-6 text-3xl font-black text-neutral-900 md:text-4xl">{cartTitle}</h1>
 
     <!-- Lignes — rempli par JS. Une carte par ligne (verticalement empilées),
          comme sur mobile, mais centrées et avec image/texte plus grands. -->
     <div id="lines" class="mx-auto max-w-2xl flex flex-col gap-3">
       <div class="rounded-lg border border-neutral-200 p-6 text-center text-neutral-500">
-        Įkeliama… / Tuščia
+        {cartLoading}
       </div>
     </div>
 
     <!-- CTA → récap (vape spot) -->
     <div class="mt-6 mx-auto max-w-2xl space-y-2 px-4">
-      <p class="flex items-center justify-center gap-1.5 text-center text-[13px] font-semibold text-[#7C3AED]">
+      <p class="flex items-center justify-center gap-1.5 text-center text-[13px] font-semibold text-[#ED2939]">
         <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"></path><path d="M15 18H9"></path><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"></path><circle cx="17" cy="18" r="2"></circle><circle cx="7" cy="18" r="2"></circle></svg>
-        Pristatome kurjeriu — paprastai 30 min–2 val., arba Lietuvos paštu.
+        {t(lang, "cart.shipNote")}
       </p>
       <a
-        href="/order-summary/"
-        class="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-4 text-base font-bold text-white hover:bg-red-700"
+        href={orderLink}
+        class="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-4 text-base font-bold text-white hover:bg-[#C61F2D]"
       >
         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
-        Pateikti užsakymą
+        {t(lang, "cart.submitOrder")}
       </a>
-      <p class="text-center text-xs text-[#9E9E9E]">Peržiūrėkite užsakymą prieš siųsdami.</p>
+      <p class="text-center text-xs text-[#9E9E9E]">{t(lang, "cart.reviewOrder")}</p>
     </div>
   </div>
 </Base>
@@ -47,10 +64,10 @@ const all = SLIM_CATALOG;
      ⚠ set:html obligatoire : Astro n'évalue PAS {…} dans le contenu d'un <script>. -->
 <script type="application/json" id="slim-data" set:html={JSON.stringify(all)}></script>
 
-<script>
-  import { getItems, setQuantity, remove, onStorageChanged } from "../lib/store";
-  import { packPrice } from "../lib/packs";
-  import { formatPrice } from "../lib/format";
+<script define:vars={{ cartEmpty, cartStart, cartRemove, cartSubtract, cartAdd, cartHome, cartBase }}>
+  import { getItems, setQuantity, remove, onStorageChanged } from "../../lib/store";
+  import { packPrice } from "../../lib/packs";
+  import { formatPrice } from "../../lib/format";
 
   const linesEl = document.getElementById("lines")!;
   const INDEX = JSON.parse(document.getElementById("slim-data")!.textContent || "[]");
@@ -69,8 +86,8 @@ const all = SLIM_CATALOG;
     if (lines.length === 0) {
       linesEl.innerHTML = `
         <div class="rounded-lg border border-neutral-200 bg-white p-10 text-center">
-          <p class="mb-3 text-neutral-600">Jūsų sąrašas tuščias.</p>
-          <a href="/" class="inline-block rounded-lg bg-neutral-900 px-5 py-2.5 text-sm font-semibold text-white">Pradėti apsipirkimą</a>
+          <p class="mb-3 text-neutral-600">${cartEmpty}</p>
+          <a href="${cartHome}" class="inline-block rounded-lg bg-neutral-900 px-5 py-2.5 text-sm font-semibold text-white">${cartStart}</a>
         </div>`;
       return;
     }
@@ -82,32 +99,31 @@ const all = SLIM_CATALOG;
         return `
         <div class="flex w-full min-h-[120px] items-stretch overflow-hidden rounded-xl border border-gray-200 bg-white">
             <!-- Image — gauche, plus grande (+ centrée dans la carte) -->
-            <a href="/produktis/${p.handle}/" class="w-[160px] md:w-[200px] flex items-center justify-center p-4 bg-[#F7F7F8]">
+            <a href="${cartBase}/produktis/${p.handle}/" class="w-[160px] md:w-[200px] flex items-center justify-center p-4 bg-[#F7F7F8]">
               <img src="${p.image}" alt="${p.title}" loading="lazy"
                 class="w-full h-full max-h-[128px] object-contain mix-blend-multiply md:max-h-[168px]" width="400" height="400">
             </a>
             <!-- Texte + contrôles — droite -->
             <div class="flex-1 min-w-0 flex flex-col py-3 pr-3 pl-1">
               <div class="flex-1 flex items-center">
-                <a href="/produktis/${p.handle}/" class="flex flex-col gap-0.5 min-w-0">
-                  ${p.vendor ? `<span class="text-[11px] font-bold uppercase tracking-[0.16em] text-[#7C3AED] line-clamp-1 md:text-[12px]">${p.vendor}</span>` : ""}
+                <a href="${cartBase}/produktis/${p.handle}/" class="flex flex-col gap-0.5 min-w-0">
+                  ${p.vendor ? `<span class="text-[11px] font-bold uppercase tracking-[0.16em] text-[#ED2939] line-clamp-1 md:text-[12px]">${p.vendor}</span>` : ""}
                   <span class="text-[15px] font-bold leading-tight text-black line-clamp-2 md:text-[17px]">${p.title}</span>
                   ${p.spec ? `<span class="text-xs text-[#9E9E9E] md:text-[13px]">${p.spec}</span>` : ""}
                   <span translate="no" class="mt-1 text-[18px] font-bold text-black md:text-[24px]">${money(subtotal)}</span>
                 </a>
               </div>
-              <!-- Sélecteur quantité + quantité -->
               <div class="mt-2 flex items-center gap-3">
                 <div class="inline-flex items-center border border-[#D0D0D0]">
-                  <button type="button" data-dec="${item.productId}" aria-label="Mažinti"
+                  <button type="button" data-dec="${item.productId}" aria-label="${cartSubtract}"
                     class="w-8 h-8 md:w-11 md:h-11 flex items-center justify-center text-lg font-bold text-neutral-700 hover:bg-[#EFEFEF] transition-colors">−</button>
                   <span translate="no" class="w-8 h-8 md:w-11 md:h-11 flex items-center justify-center text-sm md:text-base font-semibold border-x border-[#D0D0D0]">${item.quantity}</span>
-                  <button type="button" data-inc="${item.productId}" aria-label="Didinti"
+                  <button type="button" data-inc="${item.productId}" aria-label="${cartAdd}"
                     class="w-8 h-8 md:w-11 md:h-11 flex items-center justify-center text-lg font-bold text-neutral-700 hover:bg-[#EFEFEF] transition-colors">＋</button>
                 </div>
               </div>
               <button type="button" data-remove="${item.productId}"
-                class="mt-1.5 w-full bg-black text-white text-[13px] md:text-[14px] font-bold rounded-lg py-2.5 px-4 md:py-2.5 hover:opacity-90 transition-opacity">Pašalinti</button>
+                class="mt-1.5 w-full bg-black text-white text-[13px] md:text-[14px] font-bold rounded-lg py-2.5 px-4 md:py-2.5 hover:opacity-90 transition-opacity">${cartRemove}</button>
             </div>
           </div>`;
       })

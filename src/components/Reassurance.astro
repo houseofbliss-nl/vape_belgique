@@ -1,22 +1,27 @@
 ---
 // Réassurance — reproduction EXACTE de Reassurance.tsx vapespot (icônes lucide Truck/ShieldCheck/BadgeCheck/Send).
 import Icon from "./Icon.astro";
+import { t } from "../lib/i18n";
+import type { Lang } from "../lib/i18n";
+
+interface Props { lang: Lang; }
+const { lang } = Astro.props;
 const BLOCKS = [
-  { icon: "truck", title: "Kurjerio pristatymas", subtitle: "Paprastai 30 min–2 val., arba paštu." },
-  { icon: "shield-check", title: "Saugus apmokėjimas", subtitle: "Bankinis pavedimas ir kriptovaliuta." },
-  { icon: "badge-check", title: "100% autentiška", subtitle: "Tikri produktai iš geriausių prekių ženklų." },
-  { icon: "send", title: "Telegram palaikymas", subtitle: "Rašykite mums 24/7 per Telegram." },
+  { icon: "truck", titleKey: "reass.b1t", subtitleKey: "reass.b1s" },
+  { icon: "shield-check", titleKey: "reass.b2t", subtitleKey: "reass.b2s" },
+  { icon: "badge-check", titleKey: "reass.b3t", subtitleKey: "reass.b3s" },
+  { icon: "send", titleKey: "reass.b4t", subtitleKey: "reass.b4s" },
 ];
 ---
-<section class="grid grid-cols-2 lg:grid-cols-4 gap-[2px] bg-[#E0DAFF]">
+<section class="grid grid-cols-2 lg:grid-cols-4 gap-[2px] bg-[#0A0F0F]">
   {BLOCKS.map((b) => (
-    <div class="bg-[#F0EEFF] flex flex-col items-start gap-3 p-5 lg:p-8">
-      <div class="h-12 w-12 lg:h-14 lg:w-14 rounded-full bg-[#DDD6FF] flex items-center justify-center shrink-0">
-        <Icon name={b.icon} class="h-6 w-6 lg:h-7 lg:w-7 text-[#5B3DF5]" strokeWidth={1.75} />
+    <div class="bg-[#11171A] flex flex-col items-start gap-3 p-5 lg:p-8">
+      <div class="h-12 w-12 lg:h-14 lg:w-14 rounded-full bg-[#1D262A] flex items-center justify-center shrink-0">
+        <Icon name={b.icon} class="h-6 w-6 lg:h-7 lg:w-7 text-[#F2C94C]" strokeWidth={1.75} />
       </div>
       <div>
-        <p class="text-[15px] lg:text-[18px] font-bold text-black leading-tight">{b.title}</p>
-        <p class="text-[13px] lg:text-[15px] text-[#6E6E73] mt-1 leading-snug">{b.subtitle}</p>
+        <p class="text-[15px] lg:text-[18px] font-bold text-white leading-tight">{t(lang, b.titleKey)}</p>
+        <p class="text-[13px] lg:text-[15px] text-[#9AA3A7] mt-1 leading-snug">{t(lang, b.subtitleKey)}</p>
       </div>
     </div>
   ))}

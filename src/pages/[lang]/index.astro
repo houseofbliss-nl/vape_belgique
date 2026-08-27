@@ -1,0 +1,74 @@
+---
+// PAGE D'ACCUEIL VAPELT — Home « Essentiel » (décision 22/08, Option B).
+// Ordre EXACT retenu : Hero → Kategorijos → Populiariausi produktai → Réassurance.
+// PAS de carrousel de marques (BrandCarousel), PAS de bandeau livraison (DiscoverCta).
+// Produits en GRILLE VERTICALE 1/2/4 (mobile 1 pleine largeur, tablette 2, desktop 4).
+import Base from "../../layouts/Base.astro";
+import Hero from "../../components/Hero.astro";
+import ProductCard from "../../components/ProductCard.astro";
+import Reassurance from "../../components/Reassurance.astro";
+import AddToCart from "../../components/AddToCart.astro";
+import { TAXONOMY } from "../../lib/taxonomy";
+import { t, p, langStaticPaths } from "../../lib/i18n";
+import type { Lang } from "../../lib/i18n";
+import { getProducts } from "../../lib/catalog";
+
+export function getStaticPaths() { return langStaticPaths(); }
+interface Props { lang: Lang; }
+const { lang } = Astro.props;
+
+// Les 4 tuiles catégories (miniatures réelles du catalogue + comptes du classifieur).
+const cats = TAXONOMY;
+// Échantillon des produits en vitrine (20) — premières références du catalogue.
+const trendings = getProducts(lang).slice(0, 20);
+---
+<Base lang={lang} title={t(lang, "meta.homeTitle")} description={t(lang, "meta.homeDesc")}>
+  <!-- 1. Hero -->
+  <Hero lang={lang} />
+
+  <!-- 2. Kategorijos (grille verticale — miniatures du catalogue) -->
+  <section class="bg-white">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
+      <div class="flex items-end justify-between mb-5">
+        <h2 class="text-xl md:text-2xl font-bold text-black">{t(lang, "home.browseCats")}</h2>
+        <a href={p(lang, "/kategorijos/")} class="hidden md:inline-flex items-center gap-1 text-sm font-semibold text-[#ED2939] hover:opacity-80">
+          {t(lang, "home.allCats")}
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
+        </a>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        {cats.map((cat) => (
+          <a href={p(lang, `/kategorijos/${cat.id}/`)}
+            class="group rounded-lg border border-[#ECECEF] bg-white p-4 flex flex-col items-center gap-2 hover:border-[#ED2939] hover:bg-[#FFF5F6] transition-colors">
+            <span class="h-20 md:h-28 flex items-center justify-center">
+              <img src={cat.image} alt={t(lang, `cat.${cat.id}`)} loading="lazy" class="h-16 md:h-24 w-16 md:w-24 object-contain" width="160" height="160" />
+            </span>
+            <span class="text-[13px] md:text-[15px] font-semibold text-black text-center leading-tight">{t(lang, `cat.${cat.id}`)}</span>
+            <span class="text-[11px] text-[#9E9E9E]">{t(lang, "category.productsCount", { count: cat.count })}</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Populiariausi produktai — GRILLE VERTICALE 1/2/4 -->
+  <section class="bg-[#F5F5F7]">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
+      <div class="flex items-end justify-between mb-5">
+        <h2 class="text-xl md:text-2xl font-bold text-black">{t(lang, "home.trendingProducts")}</h2>
+        <a href={p(lang, "/kategorijos/visi/")} class="hidden md:inline-flex items-center gap-1 text-sm font-semibold text-[#ED2939] hover:opacity-80">
+          {t(lang, "home.viewAll")}
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
+        </a>
+      </div>
+      <div class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 md:gap-4">
+        {trendings.map((p) => <ProductCard product={p} lang={lang} />)}
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Réassurance -->
+  <Reassurance lang={lang} />
+
+  <AddToCart lang={lang} />
+</Base>

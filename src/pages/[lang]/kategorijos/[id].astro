@@ -1,0 +1,109 @@
+---
+// Page catégorie — tuiles des sous-catégories en en-tête (le « menu déroulant » vapespot)
+// puis grille de produits de la catégorie entière. « visi » = tout le catalogue.
+// Les 4 catégories racines viennent de la TAXONOMIE (classifieur) — source de vérité ;
+// « visi » = tous les produits du catalogue.
+import Base from "../../../layouts/Base.astro";
+import ProductCard from "../../../components/ProductCard.astro";
+import AddToCart from "../../../components/AddToCart.astro";
+import { TAXONOMY } from "../../../lib/taxonomy";
+import type { CategoryNode } from "../../../lib/taxonomy";
+import { SITE_NAME, SITE_URL } from "../../../lib/site";
+import { t, p, LANGS } from "../../../lib/i18n";
+import type { Lang } from "../../../lib/i18n";
+import { getProducts } from "../../../lib/catalog";
+
+export function getStaticPaths() {
+  const paths = [];
+  for (const lang of LANGS) {
+    for (const c of TAXONOMY) {
+      paths.push({ params: { lang, id: c.id }, props: { lang, cat: c } });
+    }
+    // « visi » : catégorie spéciale = tous les produits du catalogue.
+    paths.push({ params: { lang, id: "visi" }, props: { lang, cat: null } });
+  }
+  return paths;
+}
+
+interface Props { lang: Lang; cat: CategoryNode | null; }
+
+const { lang, cat } = Astro.props;
+const isVisi = cat === null;
+const products = getProducts(lang);
+
+const byHandle = new Map(products.map((p) => [p.handle, p]));
+// Sous-catégorie visi = tout le catalogue (limité à 120 pour la page).
+const items = isVisi
+  ? products.slice(0, 120)
+  : cat.subs.flatMap((s) =>
+      s.handles.map((h) => byHandle.get(h)).filter((p): p is NonNullable<typeof p> => Boolean(p))
+    );
+
+const label = isVisi ? t(lang, "footer.allProducts") : t(lang, `cat.${cat.id}`);
+const count = isVisi ? products.length : cat.count;
+const shown = items.length;
+const subs = isVisi ? [] : cat.subs;
+
+// ItemList JSON-LD : les premiers produits affichés (aides Google à comprendre la page listing).
+const itemListSchema = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  name: label,
+  numberOfItems: shown,
+  itemListElement: items.slice(0, 30).map((pr, i) => ({
+    "@type": "ListItem",
+    position: i + 1,
+    name: pr.title,
+    url: `${SITE_URL}${p(lang, `/produktis/${pr.handle}`)}`,
+  })),
+};
+
+// Fil d'ariane → BreadcrumbList partition.
+const crumbs = [{ name: t(lang, "nav.home"), url: p(lang, "/") }, { name: label }];
+---
+<Base
+  lang={lang}
+  title={`${label} — ${SITE_NAME}`}
+  description={`${SITE_NAME}: ${label} (${count}). ${t(lang, "footer.blurb")}`}
+  canonicalPath={p(lang, `/kategorijos/${isVisi ? "visi" : cat.id}`)}
+  jsonLd={itemListSchema}
+  breadcrumb={crumbs}
+>
+  <div class="mx-auto max-w-6xl px-3 py-6">
+    <nav class="mb-3 flex items-center gap-1.5 text-xs text-neutral-500">
+      <a href={p(lang, "/")} class="hover:text-neutral-900">{t(lang, "nav.home")}</a>
+      <span>/</span>
+      <span class="text-neutral-700">{label}</span>
+    </nav>
+
+    <h1 class="mb-1 text-3xl font-black text-neutral-900 md:text-5xl">{label}</h1>
+    <p class="mb-5 text-sm text-neutral-500">
+      {t(lang, "category.productsCount", { count })}{isVisi ? t(lang, "category.showPartial") : ""}
+    </p>
+
+    <!-- Sous-catégories : bandeau de tuiles (miniatures catalogue) → page sous-cat -->
+    {!isVisi && subs.length > 0 && (
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 md:gap-4 gap-3 mb-8">
+        {subs.map((s) => (
+          <a href={p(lang, `/kategorijos/${cat.id}/${s.key}/`)}
+            class="group flex items-center gap-3 border border-[#ECECEF] bg-white rounded-lg p-3 hover:border-[#ED2939] hover:bg-[#FFF5F6] transition-colors">
+            <span class="h-14 w-14 shrink-0 flex items-center justify-center bg-[#F5F5F7] overflow-hidden">
+              <img src={s.image} alt={t(lang, `sub.${s.key}`)} loading="lazy" class="h-12 w-12 object-contain" width="96" height="96" />
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-[13px] font-semibold text-black leading-tight">{t(lang, `sub.${s.key}`)}</span>
+              <span class="block text-[11px] text-[#9E9E9E] mt-0.5">{t(lang, "category.productsCount", { count: s.count })}</span>
+            </span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-neutral-400 group-hover:text-[#ED2939]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
+          </a>
+        ))}
+      </div>
+    )}
+
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 md:gap-4">
+      {items.map((p) => <ProductCard product={p} lang={lang} />)}
+    </div>
+  </div>
+
+  <AddToCart lang={lang} />
+</Base>

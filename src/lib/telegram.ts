@@ -1,10 +1,12 @@
-// Message Telegram de commande — porté de vapespot en EUROS + LITUANIEN.
-// Paiement via crypto → remise (CRYPTO_DISCOUNT_PERCENT).
+// Message Telegram de commande — EUROS + langue courante détectée au runtime
+// (NL/FR/DE via à l'URL). Paiement via crypto → remise (CRYPTO_DISCOUNT_PERCENT).
 import type { ListItem, Product } from "./types";
 import { CRYPTO_DISCOUNT_PERCENT, PACK_TIERS, packPrice } from "./packs";
 import { cryptoDiscounted } from "./checkout";
+import { detectLang, tRuntime, fmtEur } from "./i18n-client";
 
 export const TELEGRAM_HANDLE = "Vapelt_shop";
+export const SITE_NAME_TG = "vape24be";
 
 export interface OrderLine {
   product: Product;
@@ -29,7 +31,7 @@ export function ordersTotal(lines: OrderLine[]): number {
 }
 
 function fmt(p: number | null | undefined): string {
-  if (p == null) return "Kaina pagal užklausą";
+  if (p == null) return tRuntime("product.priceRequest");
   return `${p.toFixed(2).replace(".", ",")} €`;
 }
 
@@ -38,19 +40,19 @@ export function buildTelegramMessage(
   deliveryAddress = "",
   deliveryMethod: "courier" | "post" = "courier"
 ): string {
+  const lang = detectLang();
   if (lines.length === 0) {
-    return "Sveiki! Norėčiau užsisakyti VAPELT parduotuvėje.";
+    return tRuntime("tg.greeting", { name: SITE_NAME_TG });
   }
 
-  const date = new Date().toLocaleDateString("lt-LT", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
+  const date = new Date().toLocaleDateString(
+    lang === "fr" ? "fr-BE" : lang === "de" ? "de-BE" : "nl-BE",
+    { day: "2-digit", month: "long", year: "numeric" }
+  );
 
   const divider = "─────────────────────────";
 
-  const header = `🛒  NAUJAS UŽSAKYMAS — VAPELT\n📅  ${date}`;
+  const header = `${tRuntime("tg.newOrder", { name: SITE_NAME_TG })}\n📅  ${date}`;
 
   const productLines = lines
     .map((l, i) => {
@@ -58,38 +60,39 @@ export function buildTelegramMessage(
       const total = l.product.price_eur == null ? "—" : fmt(totalNum);
       const effUnit =
         l.quantity > 0 && l.product.price_eur != null ? totalNum / l.quantity : l.product.price_eur;
-      const unit = l.product.price_eur == null ? "Kaina pagal užklausą" : fmt(effUnit);
+      const unit = l.product.price_eur == null ? fmtEur(l.product.price_eur) : fmt(effUnit);
       const isPack = PACK_TIERS.some((t) => t.qty === l.quantity);
-      return `${i + 1}. ${l.product.title}\n     ${unit} × ${l.quantity} = ${total}${isPack ? "  (paketas iš " + l.quantity + ")" : ""}`;
+      return `${i + 1}. ${l.product.title}\n     ${unit} × ${l.quantity} = ${total}${isPack ? tRuntime("tg.packOf", { q: l.quantity }) : ""}`;
     })
     .join("\n\n");
 
-  const totalLine = `IŠ VISO:  ${fmt(ordersTotal(lines))}`;
+  const totalLine = `${tRuntime("tg.total")}  ${fmt(ordersTotal(lines))}`;
 
+  const nv = tRuntime("tg.notProvided");
   const addressSection = deliveryAddress.trim()
-    ? `🚚  PRISTATYMO ADRESAS\n\n    ${deliveryAddress.trim()}`
-    : `🚚  PRISTATYMO ADRESAS\n\n    Nenurodytas`;
+    ? `${tRuntime("tg.shippingAddress")}\n\n    ${deliveryAddress.trim()}`
+    : `${tRuntime("tg.shippingAddress")}\n\n    ${nv}`;
 
   const deliveryMethodSection =
     deliveryMethod === "courier"
-      ? ["🛵  PRISTATYMO BŪDAS", "    Kurjeriu — paprastai 30 min–2 val. iki durų.", "    (Arba paštu, jei pageidaujama.)"].join("\n")
-      : ["📮  PRISTATYMO BŪDAS", "    Lietuvos paštu — 1–3 darbo dienos."].join("\n");
+      ? [tRuntime("tg.deliveryTitle"), tRuntime("tg.courierDesc")].join("\n")
+      : [tRuntime("tg.deliveryTitle"), tRuntime("tg.postDesc")].join("\n");
 
   const total = ordersTotal(lines);
   const cryptoTotal = cryptoDiscounted(total);
   const payment = [
-    "💳  APMOKĖJIMAS",
-    `    Bankiniu pavedimu :  ${fmt(total)}`,
-    `    Kriptovaliuta :      ${fmt(cryptoTotal)}  (sutaupote ${CRYPTO_DISCOUNT_PERCENT}%)`,
-    "    Apmokėjimas reikalingas prieš pristatymą.",
+    tRuntime("tg.paymentHeading"),
+    `    ${tRuntime("tg.paymentBank")}  ${fmtEur(total)}`,
+    `    ${tRuntime("tg.paymentCrypto")}      ${fmtEur(cryptoTotal)}  (${tRuntime("tg.savePercent", { p: CRYPTO_DISCOUNT_PERCENT })})`,
+    `    ${tRuntime("tg.payBefore")}`,
   ].join("\n");
 
-  const footer = "Prašome atsakyti, kad patvirtintumėte užsakymą. Ačiū! 🙏";
+  const footer = tRuntime("tg.footer");
 
   return [
     header,
     divider,
-    "📦  UŽSAKYMAS\n",
+    tRuntime("tg.orderHeading"),
     productLines,
     divider,
     totalLine,
