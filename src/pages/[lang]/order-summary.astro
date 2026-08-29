@@ -213,6 +213,7 @@ const all = SLIM_CATALOG;
           <p class="text-center text-[13px] text-[#E53E3E] mt-2 font-bold">${tRuntime("order.minOrderNotice",{min:fmtEur(MIN),more:fmtEur(under)})}</p>
         </div>` : `
         <a id="checkout" href="${url}" target="_blank" rel="noopener noreferrer"
+          style="background:#000;color:#F2C94C"
           class="flex items-center justify-center gap-2 w-full rounded-lg bg-black text-[#F2C94C] py-4 text-[15px] font-bold hover:bg-neutral-900 transition-colors">
           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
           ${tRuntime("order.checkout")}

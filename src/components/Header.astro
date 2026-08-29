@@ -6,7 +6,6 @@ import Icon from "./Icon.astro";
 import { getCount } from "../lib/store";
 import { t, p, LANG_NAMES } from "../lib/i18n";
 import type { Lang } from "../lib/i18n";
-import { SITE_URL } from "../lib/site";
 
 interface Props { lang: Lang; }
 const { lang } = Astro.props;
@@ -16,7 +15,8 @@ const { count: initialCount = getCount() } = Astro.props;
 const cur = Astro.url.pathname;
 const curBase = cur.replace(/^\/(nl|fr|de)\b/, "") || "/";
 const curQuery = Astro.url.search;
-const switchTo = (l: Lang) => `${SITE_URL}/${l}${curBase}${curQuery}`;
+// URLs RELATIVES : on reste sur le même domaine (dev OU prod) — pas de « saut » d'origine.
+const switchTo = (l: Lang) => `/${l}${curBase}${curQuery}`;
 ---
 <header class="sticky top-0 z-40 bg-white border-b border-[#F0F0F0]">
   <div class="max-w-7xl mx-auto flex items-center px-4 md:px-6 h-[60px] md:h-[72px] gap-2 md:gap-3">
@@ -48,7 +48,7 @@ const switchTo = (l: Lang) => `${SITE_URL}/${l}${curBase}${curQuery}`;
         {(["nl", "fr", "de"] as Lang[]).map((l, i) => (
           <a
             href={switchTo(l)}
-            lang={LANG_NAMES[l]}
+            lang={l}
             title={LANG_NAMES[l]}
             class={`px-2.5 md:px-3 py-2 text-[12px] md:text-[13px] font-bold leading-none uppercase tracking-wide transition-colors ${
               i > 0 ? "border-l-2 border-neutral-300" : ""
