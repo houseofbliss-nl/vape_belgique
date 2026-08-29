@@ -9,7 +9,8 @@ const { lang } = Astro.props;
 <footer class="mt-12 border-t border-neutral-200 bg-neutral-100 pb-24 md:pb-0">
   <div class="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-4 py-10 md:grid-cols-4">
     <div class="col-span-2 md:col-span-1">
-      <p class="mb-3 text-xl font-black tracking-tight text-neutral-900">{SITE_NAME}</p>
+      <!-- Marque : même design que le logo du header — vape24 sombre + « be » rouge -->
+      <p class="mb-3 text-xl font-black tracking-tight" style="color:#0A0F0F">vape24<span style="color:#ED2939">be</span></p>
       <p class="text-sm text-neutral-600">{t(lang, "footer.blurb")}</p>
     </div>
 

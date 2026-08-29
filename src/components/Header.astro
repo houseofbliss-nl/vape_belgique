@@ -26,9 +26,11 @@ const switchTo = (l: Lang) => `/${l}${curBase}${curQuery}`;
       <Icon name="menu" class="h-6 w-6" />
     </button>
 
-    <!-- Logo — centré mobile, gauche desktop -->
+    <!-- Logo — dans le flux flex (mx-auto centre entre hamburger et icônes, mobile).
+         Ne PAS repasser en absolute/transform : ça crée un stacking-context qui recouvre
+         le sélecteur de langue et bloque ses clics (bug constaté). -->
     <a href={p(lang, "/")} aria-label="vape24be"
-      class="flex items-center md:mr-2 md:static absolute left-1/2 -translate-x-1/2 md:translate-x-0">
+      class="flex items-center mx-auto md:mx-0 md:mr-2 min-w-0">
       <img src="/images/logo-vape24be.svg" alt="vape24be" class="h-7 md:h-8 w-auto" />
     </a>
 
@@ -41,8 +43,8 @@ const switchTo = (l: Lang) => `/${l}${curBase}${curQuery}`;
       </button>
     </div>
 
-    <!-- Icônes droite -->
-    <div class="flex items-center ml-auto gap-1">
+    <!-- Icônes droite — z-10 pour rester au-dessus de tout (sélecteur toujours cliquable) -->
+    <div class="relative z-10 flex items-center ml-auto gap-1">
       <!-- Sélecteur de langue — bien visible (pastilles noires / contrastées) -->
       <div class="flex items-center rounded-lg border-2 border-neutral-800 overflow-hidden mr-1.5 shrink-0" role="group" aria-label="Taal / Langue / Sprache">
         {(["nl", "fr", "de"] as Lang[]).map((l, i) => (
