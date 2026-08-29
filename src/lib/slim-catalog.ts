@@ -2,6 +2,7 @@
 // Le JSON complet (2,3 Mo) contient description/tags inutiles au panier ;
 // on n'embarque ici que les champs nécessaires au lookup client (~580 Ko).
 import productsData from "../data/products-en.json";
+import { PRICE_MULTIPLIER } from "./site";
 import type { Product } from "./types";
 import { deriveSpec } from "./spec";
 
@@ -23,6 +24,6 @@ export const SLIM_CATALOG: SlimProduct[] = all.map((p) => ({
   title: p.title,
   vendor: p.vendor,
   image: p.image,
-  price_eur: p.price_eur,
+  price_eur: Math.round(p.price_eur * PRICE_MULTIPLIER * 100) / 100,
   spec: deriveSpec(p.description),
 }));

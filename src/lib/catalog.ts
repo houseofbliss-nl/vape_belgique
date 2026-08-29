@@ -4,12 +4,29 @@
 import nlCatalog from "../data/products-nl.json";
 import frCatalog from "../data/products-fr.json";
 import deCatalog from "../data/products-de.json";
+import { PRICE_MULTIPLIER } from "./site";
 import type { Lang } from "./i18n";
 import type { Product } from "./types";
 
 type Catalog = { generatedAt?: string; products: Product[] };
 
-const CATALOGS: Record<Lang, Catalog> = { nl: nlCatalog, fr: frCatalog, de: deCatalog };
+const rawCatalogs: Record<Lang, Catalog> = { nl: nlCatalog, fr: frCatalog, de: deCatalog };
+
+// Majoration BE appliquée UNE fois à la charge : chaque produit voit son
+// price_eur multiplié par PRICE_MULTIPLIER (arrondi au centime). Les packs
+// dérivent ensuite du prix unitaire majoré.
+const CATALOGS: Record<Lang, Catalog> = Object.fromEntries(
+  Object.entries(rawCatalogs).map(([lang, cat]) => [
+    lang,
+    {
+      ...cat,
+      products: cat.products.map((p) => ({
+        ...p,
+        price_eur: Math.round(p.price_eur * PRICE_MULTIPLIER * 100) / 100,
+      })),
+    },
+  ])
+) as Record<Lang, Catalog>;
 
 /** Tous les produits de la langue donnée. */
 export function getProducts(lang: Lang): Product[] {

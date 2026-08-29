@@ -42,9 +42,9 @@ const YELLOW = "#F2C94C";
           {t(lang, "hero.desc")}
         </p>
 
-        <!-- Arguments — grille 2 colonnes sur PC/tablette : Produits originaux + Large sélection en haut,
-             Livraison rapide + Paiement sécurisé en bas (mobile : 1 colonne). -->
-        <div class="mt-7 md:mt-9 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-[clamp(1rem,1.7vw,1.6rem)] font-semibold text-white/95">
+        <!-- Arguments — TOUJOURS 2 colonnes (mobile, tablette, PC) : Produits originaux + Large sélection
+             sur la 1re ligne (gauche/droite), Livraison rapide + Paiement sécurisé sur la 2e. -->
+        <div class="mt-7 md:mt-9 grid grid-cols-2 gap-x-4 gap-y-2 sm:gap-x-6 sm:gap-y-3 text-[clamp(1rem,1.7vw,1.6rem)] font-semibold text-white/95">
           <span class="inline-flex items-center gap-2"><svg class="h-5 w-5" style={`color:${YELLOW}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>{t(lang, "hero.arg1")}</span>
           <span class="inline-flex items-center gap-2"><svg class="h-5 w-5" style={`color:${YELLOW}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>{t(lang, "hero.arg2")}</span>
           <span class="inline-flex items-center gap-2"><svg class="h-5 w-5" style={`color:${YELLOW}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 6V4H3v13h3"/><path d="M7 6h8"/><path d="M16 10h5l3 3v3h-2"/><circle cx="8" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg>{t(lang, "hero.arg3")}</span>

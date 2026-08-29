@@ -5,6 +5,11 @@ export const SITE_NAME = "vape24be";
 export const SITE_TITLE = "vape24be — Vapes & e-sigaretten in België";
 export const SITE_URL = "https://vape24be.dealsnows.com";
 export const SITE_LANG = "nl";
+
+/** Majoration des prix catalogue (prix vapesale24) pour le marché BELGE.
+ *  +50% → ×1.5. Appliqué UNE fois dans catalog.ts + slim-catalog.ts,
+ *  se propage partout (cartes, panier, récap, packs, Telegram, JSON-LD). */
+export const PRICE_MULTIPLIER = 1.5;
 export const TELEGRAM_URL = `https://t.me/${TELEGRAM_HANDLE}`;
 
 /** Pays de livraison (code ISO 3166-1 alpha-2) — utilisé dans le schema offers
