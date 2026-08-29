@@ -83,7 +83,7 @@ export function buildTelegramMessage(
   const payment = [
     tRuntime("tg.paymentHeading"),
     `    ${tRuntime("tg.paymentBank")}  ${fmtEur(total)}`,
-    `    ${tRuntime("tg.paymentCrypto")}      ${fmtEur(cryptoTotal)}  (${tRuntime("tg.savePercent", { p: CRYPTO_DISCOUNT_PERCENT })})`,
+    `    ${tRuntime("tg.paymentCrypto")}      ${fmtEur(cryptoTotal)}  ${tRuntime("tg.savePercent", { p: CRYPTO_DISCOUNT_PERCENT })}`,
     `    ${tRuntime("tg.payBefore")}`,
   ].join("\n");
 
