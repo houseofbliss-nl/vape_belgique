@@ -174,18 +174,12 @@ const all = SLIM_CATALOG;
         <!-- Méthodes de paiement -->
         <div>
           <p class="text-[13px] font-extrabold text-neutral-900 mb-2">${tRuntime("order.payMethods")}</p>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
             <div class="flex items-center gap-1.5">
               <span class="h-9 w-9 rounded-full bg-[#F5F5F5] flex items-center justify-center text-neutral-700">
                 <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 22h18"></path><path d="M6 18v-7"></path><path d="M10 18v-7"></path><path d="M14 18v-7"></path><path d="M18 18v-7"></path><path d="m12 2 8 5H4z"></path></svg>
               </span>
               <div><p class="text-[12px] font-bold text-neutral-900">${tRuntime("order.bankTransfer")}</p><p class="text-[10px] text-[#6E6E73]">IBAN / SWIFT</p></div>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <span class="h-9 w-9 rounded-full bg-[#F5F5F5] flex items-center justify-center text-neutral-700">
-                <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="5" rx="2"></rect><path d="M2 10h20"></path></svg>
-              </span>
-              <div><p class="text-[12px] font-bold text-neutral-900">${tRuntime("order.creditCard")}</p><p class="text-[10px] text-[#6E6E73]">Visa / Mastercard</p></div>
             </div>
             <div class="flex items-center gap-1.5">
               <span class="h-9 w-9 rounded-full bg-[#F5F5F5] flex items-center justify-center text-neutral-700">
