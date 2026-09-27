@@ -55,12 +55,21 @@ const {
   noindex = false,
 } = Astro.props;
 
-const canonical = canonicalPath == null ? Astro.url.pathname : canonicalPath;
+// Normalise un chemin interne pour qu'il termine TOUJOURS par "/" — la seule
+// forme listée au sitemap (ce que Google crawle). Sans cela canonical/hreflang
+// pointaient vers /fr/apie (sans slash) qui répond par un 308 → signal
+// "alternative page" sur 100% des pages. Fix indexation 27/09 (P2).
+function normSlash(path) {
+  if (path.startsWith("http")) return path; // URL absolue → inchangée
+  return path.length > 1 && !path.endsWith("/") ? `${path}/` : path;
+}
+
+const canonical = normSlash(canonicalPath == null ? Astro.url.pathname : canonicalPath);
 const canonicalUrl = canonical.startsWith("http") ? canonical : `${SITE_URL}${canonical}`;
 
 // Chemins de base SANS préfixe langue (pour hreflang alternates).
 // canonicalPath est déjà préfixé (ex. /fr/produktis/x) → on retire /fr.
-const basePath = stripLang(lang, canonicalPath ?? Astro.url.pathname);
+const basePath = normSlash(stripLang(lang, canonicalPath ?? Astro.url.pathname));
 const hrefLangs = LANGS.map((l) => ({
   lang: LANG_LOCALES[l],
   url: `${SITE_URL}/${l}${basePath}`,
