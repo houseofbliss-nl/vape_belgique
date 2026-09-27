@@ -13,7 +13,7 @@ import { getProducts } from "../../../../lib/catalog";
 import { TAXONOMY } from "../../../../lib/taxonomy";
 import type { CategoryNode, SubCategory } from "../../../../lib/taxonomy";
 import { SITE_NAME, SITE_URL } from "../../../../lib/site";
-import { t, p, LANGS } from "../../../../lib/i18n";
+import { t, p, pBuild, LANGS } from "../../../../lib/i18n";
 import type { Lang } from "../../../../lib/i18n";
 
 export function getStaticPaths() {
@@ -77,7 +77,7 @@ const crumbs = [
   lang={lang}
   title={`${subLabel} — ${catLabel} — ${SITE_NAME}`}
   description={`${SITE_NAME}: ${subLabel} (${totalCount}). ${t(lang, "footer.blurb")}`}
-  canonicalPath={p(lang, `/kategorijos/${category.id}/${sub.key}`)}
+  canonicalPath={pBuild(lang, `/kategorijos/${category.id}/${sub.key}`)}
   jsonLd={itemListSchema}
   breadcrumb={crumbs}
 >

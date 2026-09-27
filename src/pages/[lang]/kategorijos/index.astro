@@ -3,7 +3,7 @@
 import Base from "../../../layouts/Base.astro";
 import { TAXONOMY } from "../../../lib/taxonomy";
 import { SITE_NAME } from "../../../lib/site";
-import { t, p, langStaticPaths } from "../../../lib/i18n";
+import { t, p, pBuild, langStaticPaths } from "../../../lib/i18n";
 import type { Lang } from "../../../lib/i18n";
 import { getProducts } from "../../../lib/catalog";
 
@@ -21,7 +21,7 @@ const entries = [
   lang={lang}
   title={`${t(lang, "category.categoriesTitle")} — ${SITE_NAME}`}
   description={t(lang, "footer.blurb")}
-  canonicalPath={p(lang, "/kategorijos")}
+  canonicalPath={pBuild(lang, "/kategorijos")}
 >
   <div class="mx-auto max-w-6xl px-3 py-6">
     <h1 class="mb-6 text-3xl font-black text-neutral-900 md:text-5xl">{t(lang, "category.categoriesTitle")}</h1>

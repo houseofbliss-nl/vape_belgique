@@ -11,7 +11,7 @@ import { formatPrice } from "../../../lib/format";
 import { packOptions, CRYPTO_DISCOUNT_PERCENT } from "../../../lib/packs";
 import { SITE_URL, SITE_NAME, ORG_ADDRESS, SHIPPING_COUNTRY } from "../../../lib/site";
 import type { Product } from "../../../lib/types";
-import { t, p, LANGS, LANG_LOCALES } from "../../../lib/i18n";
+import { t, p, pBuild, LANGS, LANG_LOCALES } from "../../../lib/i18n";
 import type { Lang } from "../../../lib/i18n";
 
 export function getStaticPaths() {
@@ -136,7 +136,7 @@ crumbs.push({ name: product.title });
   lang={lang}
   title={`${product.title} — ${SITE_NAME}`}
   description={metaDescription}
-  canonicalPath={p(lang, `/produktis/${product.handle}`)}
+  canonicalPath={pBuild(lang, `/produktis/${product.handle}`)}
   schema={schema}
   ogImage={product.image}
   ogType="product"

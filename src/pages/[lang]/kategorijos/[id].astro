@@ -9,7 +9,7 @@ import AddToCart from "../../../components/AddToCart.astro";
 import { TAXONOMY } from "../../../lib/taxonomy";
 import type { CategoryNode } from "../../../lib/taxonomy";
 import { SITE_NAME, SITE_URL } from "../../../lib/site";
-import { t, p, LANGS } from "../../../lib/i18n";
+import { t, p, pBuild, LANGS } from "../../../lib/i18n";
 import type { Lang } from "../../../lib/i18n";
 import { getProducts } from "../../../lib/catalog";
 
@@ -65,7 +65,7 @@ const crumbs = [{ name: t(lang, "nav.home"), url: p(lang, "/") }, { name: label 
   lang={lang}
   title={`${label} — ${SITE_NAME}`}
   description={`${SITE_NAME}: ${label} (${count}). ${t(lang, "footer.blurb")}`}
-  canonicalPath={p(lang, `/kategorijos/${isVisi ? "visi" : cat.id}`)}
+  canonicalPath={pBuild(lang, `/kategorijos/${isVisi ? "visi" : cat.id}`)}
   jsonLd={itemListSchema}
   breadcrumb={crumbs}
 >

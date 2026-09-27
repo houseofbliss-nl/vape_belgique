@@ -9,7 +9,7 @@ import MobileBottomNav from "../components/MobileBottomNav.astro";
 import SearchDialog from "../components/SearchDialog.astro";
 import { SITE_NAME, SITE_URL, SITE_TITLE, SITE_DESCRIPTION } from "../lib/site";
 import { ORG_ADDRESS } from "../lib/site";
-import { LANGS, LANG_LOCALES, stripLang } from "../lib/i18n";
+import { LANGS, LANG_LOCALES, stripLang, localizePath } from "../lib/i18n";
 import type { Lang } from "../lib/i18n";
 
 interface Crumb {
@@ -64,15 +64,21 @@ function normSlash(path) {
   return path.length > 1 && !path.endsWith("/") ? `${path}/` : path;
 }
 
-const canonical = normSlash(canonicalPath == null ? Astro.url.pathname : canonicalPath);
+// Chemin de CONSTRUCTION (dossiers source lituaniens [lang]/…), déjà préfixé
+// langue (ex. /fr/produktis/x) : c'est la forme dont on dérive les 3 langues.
+const buildPath = canonicalPath ?? Astro.url.pathname;
+
+// La page courante sert SON slug LOCALISÉ (canonical aligné avec le sitemap).
+// Si canonicalPath est une URL absolue (http), on la laisse inchangée.
+const canonical = normSlash(buildPath.startsWith("http") ? buildPath : localizePath(lang, buildPath));
 const canonicalUrl = canonical.startsWith("http") ? canonical : `${SITE_URL}${canonical}`;
 
-// Chemins de base SANS préfixe langue (pour hreflang alternates).
-// canonicalPath est déjà préfixé (ex. /fr/produktis/x) → on retire /fr.
-const basePath = normSlash(stripLang(lang, canonicalPath ?? Astro.url.pathname));
+// Chemins de base SANS préfixe langue (pour hreflang alternates), toujours en
+// construction : on localise le chemin PAR LANGUE CIBLE pour chaque alternative.
+const baseBuild = normSlash(stripLang(lang, buildPath));
 const hrefLangs = LANGS.map((l) => ({
   lang: LANG_LOCALES[l],
-  url: `${SITE_URL}/${l}${basePath}`,
+  url: `${SITE_URL}/${l}${localizePath(l, baseBuild)}`,
 }));
 
 const ogImageUrl = ogImage.startsWith("http") ? ogImage : `${SITE_URL}${ogImage}`;
@@ -122,7 +128,7 @@ const jsonLdObjects = [pageSchema, ...(jsonLd ? [jsonLd] : []), ...(breadcrumbSc
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalUrl} />
     {hrefLangs.map((h) => <link rel="alternate" hreflang={h.lang} href={h.url} />)}
-    <link rel="alternate" hreflang="x-default" href={`${SITE_URL}/${lang}${basePath}`} />
+    <link rel="alternate" hreflang="x-default" href={`${SITE_URL}/${lang}${localizePath(lang, baseBuild)}`} />
     <meta property="og:locale" content={LANG_LOCALES[lang]} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     {noindex && <meta name="robots" content="noindex" />}

@@ -1,1 +1,29 @@
 /  /nl/  301
+
+# Tâche 2 (27/09) — anciens slugs LITUANIENS → nouveaux slugs localisés (301)
+/nl/produktis/* /nl/producten/:splat 301
+/fr/produktis/* /fr/produits/:splat 301
+/de/produktis/* /de/produkte/:splat 301
+/nl/kategorijos/* /nl/categorieen/:splat 301
+/fr/kategorijos/* /fr/categories/:splat 301
+/de/kategorijos/* /de/kategorien/:splat 301
+/nl/miestai/* /nl/steden/:splat 301
+/fr/miestai/* /fr/villes/:splat 301
+/de/miestai/* /de/staedte/:splat 301
+/nl/zinios /nl/nieuws/ 301
+/nl/apie /nl/over-ons/ 301
+/fr/zinios /fr/actualites/ 301
+/fr/apie /fr/a-propos/ 301
+/de/zinios /de/news/ 301
+/de/apie /de/ueber-uns/ 301
+
+# Catégories racines (éviter les doubles 301 vers une URL morte)
+/nl/kategorijos/vienkartiniai/* /nl/categorieen/wegwerpvapes/:splat 301
+/nl/kategorijos/esultys/* /nl/categorieen/e-liquids/:splat 301
+/nl/kategorijos/priedai/* /nl/categorieen/apparaten/:splat 301
+/fr/kategorijos/vienkartiniai/* /fr/categories/vapes-jetables/:splat 301
+/fr/kategorijos/esultys/* /fr/categories/e-liquides/:splat 301
+/fr/kategorijos/priedai/* /fr/categories/appareils/:splat 301
+/de/kategorijos/vienkartiniai/* /de/kategorien/wegwerfvapes/:splat 301
+/de/kategorijos/esultys/* /de/kategorien/e-liquids/:splat 301
+/de/kategorijos/priedai/* /de/kategorien/geraete/:splat 301

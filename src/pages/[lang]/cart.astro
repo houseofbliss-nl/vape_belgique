@@ -5,7 +5,7 @@
 import Base from "../../layouts/Base.astro";
 import { SLIM_CATALOG } from "../../lib/slim-catalog";
 import { SITE_NAME } from "../../lib/site";
-import { t, p, langStaticPaths } from "../../lib/i18n";
+import { t, p, pBuild, langStaticPaths } from "../../lib/i18n";
 import type { Lang } from "../../lib/i18n";
 
 export function getStaticPaths() { return langStaticPaths(); }
@@ -22,13 +22,14 @@ const cartSubtract = t(lang, "product.qtyMinusAria");
 const cartAdd = t(lang, "product.qtyPlusAria");
 const cartHome = p(lang, "/"); // /{lang}/
 const cartBase = `/${lang}`;   // /{lang}
+const cartProductBase = p(lang, "/produktis"); // slug produit LOCALISÉ (/nl/producten)
 const orderLink = p(lang, "/order-summary/");
 ---
 <Base
   lang={lang}
   title={`${cartTitle} — ${SITE_NAME}`}
   description={t(lang, "footer.blurb")}
-  canonicalPath={p(lang, "/cart")}
+  canonicalPath={pBuild(lang, "/cart")}
   noindex
 >
   <div class="mx-auto max-w-4xl px-3 py-6 md:py-8">
@@ -109,14 +110,14 @@ const orderLink = p(lang, "/order-summary/");
         return `
         <div class="flex w-full min-h-[120px] items-stretch overflow-hidden rounded-xl border border-gray-200 bg-white">
             <!-- Image — gauche, plus grande (+ centrée dans la carte) -->
-            <a href="${cartBase}/produktis/${p.handle}/" class="w-[160px] md:w-[200px] flex items-center justify-center p-4 bg-[#F7F7F8]">
+            <a href="${cartProductBase}/${p.handle}/" class="w-[160px] md:w-[200px] flex items-center justify-center p-4 bg-[#F7F7F8]">
               <img src="${p.image}" alt="${p.title}" loading="lazy"
                 class="w-full h-full max-h-[128px] object-contain mix-blend-multiply md:max-h-[168px]" width="400" height="400">
             </a>
             <!-- Texte + contrôles — droite -->
             <div class="flex-1 min-w-0 flex flex-col py-3 pr-3 pl-1">
               <div class="flex-1 flex items-center">
-                <a href="${cartBase}/produktis/${p.handle}/" class="flex flex-col gap-0.5 min-w-0">
+                <a href="${cartProductBase}/${p.handle}/" class="flex flex-col gap-0.5 min-w-0">
                   ${p.vendor ? `<span class="text-[11px] font-bold uppercase tracking-[0.16em] text-[#ED2939] line-clamp-1 md:text-[12px]">${p.vendor}</span>` : ""}
                   <span class="text-[15px] font-bold leading-tight text-black line-clamp-2 md:text-[17px]">${p.title}</span>
                   ${p.spec ? `<span class="text-xs text-[#9E9E9E] md:text-[13px]">${p.spec}</span>` : ""}
