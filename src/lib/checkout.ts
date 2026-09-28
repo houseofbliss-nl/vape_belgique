@@ -2,9 +2,10 @@
 // Commande minimale avant de pouvoir passer commande, remise crypto/gift card.
 import { CRYPTO_DISCOUNT_PERCENT } from "./packs";
 
-// Commande minimale (EUR) — transposition du MIN_ORDER_AUD (200 AUD ≈ 120 €)
-// ramené à un minimum réaliste pour le marché lituanien du vape.
-export const MIN_ORDER_EUR = 30;
+// Commande minimale (EUR) — marché belge : livraison par coursier/poste,
+// 50 € minimum pour que la commande soit rentable. Utilisée sur la page
+// produit (bouton Telegram) ET le récap de commande (order-summary).
+export const MIN_ORDER_EUR = 50;
 
 export function cryptoDiscountAmount(price: number): number {
   return (price * CRYPTO_DISCOUNT_PERCENT) / 100;

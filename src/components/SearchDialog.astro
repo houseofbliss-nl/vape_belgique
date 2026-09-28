@@ -68,7 +68,7 @@ const prefix = p(lang, "/produktis/");
       return;
     }
     resultsEl.innerHTML = matches.map((d) => `
-      <a href="${prefix}produktis/${d.h}/" class="flex items-center gap-3 p-3 hover:bg-[#F5F5F7] transition-colors">
+      <a href="${prefix}${d.h}/" class="flex items-center gap-3 p-3 hover:bg-[#F5F5F7] transition-colors">
         <img src="${d.i}" alt="" loading="lazy" class="h-10 w-10 object-contain border border-[#EEE] rounded bg-white">
         <div class="flex-1 min-w-0">
           <p class="text-sm font-medium truncate">${(d.t || "").replace(/"/g, "&quot;")}</p>

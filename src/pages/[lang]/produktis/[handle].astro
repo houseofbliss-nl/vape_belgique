@@ -9,6 +9,7 @@ import { BY_CAT_SUB, categoryByCat } from "../../../lib/taxonomy";
 import { classify } from "../../../lib/classify";
 import { formatPrice } from "../../../lib/format";
 import { packOptions, CRYPTO_DISCOUNT_PERCENT } from "../../../lib/packs";
+import { MIN_ORDER_EUR } from "../../../lib/checkout";
 import { SITE_URL, SITE_NAME, ORG_ADDRESS, SHIPPING_COUNTRY } from "../../../lib/site";
 import type { Product } from "../../../lib/types";
 import { t, p, pBuild, LANGS, LANG_LOCALES } from "../../../lib/i18n";
@@ -293,6 +294,7 @@ crumbs.push({ name: product.title });
           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
           {t(lang, "product.orderTelegram")}
         </a>
+        <p id="minOrderNotice" class="hidden mt-2 text-[13px] font-semibold text-[#ED2939]"></p>
       </div>
     </div>
 
@@ -324,6 +326,8 @@ crumbs.push({ name: product.title });
   addedLabel: t(lang, "product.added"),
   TG: TGS,
   CRYPTO_DISCOUNT_PERCENT,
+  MIN_ORDER: MIN_ORDER_EUR,
+  minOrderNotice: t(lang, "order.minOrderNotice"),
 }}>
   // ⚠️ Script AUTO-CONFONDU (self-contained) : Astro émet ce <script define:vars>
   // en "classic script" non bundlé → les `import { ... } from "../../../lib"` seraient
@@ -489,8 +493,24 @@ crumbs.push({ name: product.title });
   });
 
   // Lien Telegram : message direct avec ce produit + quantité.
+  // Garde-fou COMMANDE MINIMALE : tant que le panier virtuel (ce produit × la
+  // quantité choisie) est sous MIN_ORDER, on BLOQUE et on affiche le manque —
+  // même comportement que le récap de commande (order-summary).
+  const minNoticeEl = document.getElementById("minOrderNotice");
   telegramBtn?.addEventListener("click", (e) => {
     e.preventDefault();
+    const total = packPrice(prod.price, qty);
+    if (total != null && total < MIN_ORDER) {
+      const under = MIN_ORDER - total;
+      if (minNoticeEl) {
+        minNoticeEl.textContent = minOrderNotice
+          .replaceAll("{min}", money(MIN_ORDER))
+          .replaceAll("{more}", money(under));
+        minNoticeEl.classList.remove("hidden");
+      }
+      return; // la commande NE PART PAS en-dessous du minimum
+    }
+    if (minNoticeEl) minNoticeEl.classList.add("hidden");
     const lines = [{ product: prod, quantity: qty }];
     const msg = buildTelegramMessage(lines, "", "courier");
     window.open(buildTelegramUrl(msg), "_blank", "noopener");

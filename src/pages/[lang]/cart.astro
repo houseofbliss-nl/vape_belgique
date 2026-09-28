@@ -69,7 +69,7 @@ const orderLink = p(lang, "/order-summary/");
 <!-- Chaînes = dans un JSON inline (comme slim-data) pour éviter un <script>
      classic contenant un import (SyntaxError → render jamais exécuté = "chargement" permanent). -->
 <script type="application/json" id="cart-strings"
-  set:html={JSON.stringify({ cartEmpty, cartStart, cartRemove, cartSubtract, cartAdd, cartHome, cartBase })}>
+  set:html={JSON.stringify({ cartEmpty, cartStart, cartRemove, cartSubtract, cartAdd, cartHome, cartBase, cartProductBase })}>
 </script>
 
 <script type="module">
@@ -78,7 +78,7 @@ const orderLink = p(lang, "/order-summary/");
   import { formatPrice } from "../../lib/format";
 
   const STR = JSON.parse(document.getElementById("cart-strings")!.textContent || "{}");
-  const { cartEmpty, cartStart, cartRemove, cartSubtract, cartAdd, cartHome, cartBase } = STR;
+  const { cartEmpty, cartStart, cartRemove, cartSubtract, cartAdd, cartHome, cartBase, cartProductBase } = STR;
 
   const linesEl = document.getElementById("lines")!;
   const INDEX = JSON.parse(document.getElementById("slim-data")!.textContent || "[]");
