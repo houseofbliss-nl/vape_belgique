@@ -3,7 +3,10 @@
 // Le prix unitaire garde ses décimales (.95/.49) ; chaque pack est arrondi
 // à 2 décimales (cents EUR).
 
-export const CRYPTO_DISCOUNT_PERCENT = 10;
+// Remise (％) appliquée au paiement en CRYPTO ou par CARTE CADEAU —
+// affichée dans le récap (order.savePercent) et le message Telegram
+// (tg.savePercent) via le placeholder {p} : un seul point à changer.
+export const CRYPTO_DISCOUNT_PERCENT = 15;
 
 export interface PackTier {
   qty: number;
